@@ -3,12 +3,17 @@
 export {};
 import { cwd } from "process";
 import { TableRelations } from "./types";
-import { dirname, join } from "path";
+import {  copyFileSync, readFileSync, writeFileSync } from 'fs';
+import {  join } from "path";
+import { replaceInFileSync } from "./utils/replace-in-file";
 
 const drizzleConfigPath = join(cwd(), "drizzle.config.ts");
 const drizzleConfig = await import(drizzleConfigPath);
-const schema = await import(join(cwd(), drizzleConfig.default.schema));
-//const schema = await import(`${cwd()}/${drizzleConfig.default.schema}`);
+let schemaPath = join(cwd(), drizzleConfig.default.schema)
+if (schemaPath.endsWith('.gen.ts')){
+  schemaPath = schemaPath.slice(0, schemaPath.length - 7);
+}
+const schema = await import(schemaPath);
 
 
 function filterPgTables(schemaExports: any): Record<string, any> {
@@ -91,7 +96,7 @@ function addSecondaryRelations(relations: TableRelations[]): void {
   }
 }
 
-function main() {
+function getRelationsList() {
   const pgTables = filterPgTables(schema);
 
   const relations = extractPrimaryRelations(pgTables);
@@ -102,10 +107,10 @@ function main() {
   }
   const tableNameToVariableNameMap = createTableNameMap(pgTables);
 
-  const finalProductList = relations
+  const finalRelationsList = relations
     .map(
       (rel) => `
-    export const ${tableNameToVariableNameMap[rel.tableName]}Relations = relations(${tableNameToVariableNameMap[rel.tableName]}, ({one, many}) => ({
+    export const ${tableNameToVariableNameMap[rel.tableName]}Relations = dzorm.relations(${tableNameToVariableNameMap[rel.tableName]}, ({one, many}) => ({
       ${rel.one
         .map((oneRel) =>
           oneRel.type === "secondary"
@@ -130,15 +135,23 @@ function main() {
         .join("")}
     }));
      `,
-    )
-    .join("");
-  if (1) {
-    const formattedString = finalProductList;
-    console.log(formattedString);
-  }
-
-  return relations;
+    );
+  return finalRelationsList;
 }
 
-main();
+function mutateSchemaFile(){
+  const relationsList = getRelationsList();
 
+  const genSchemaPath = `${schemaPath}.gen.ts`;
+  
+  // ensure drizzle config points to .get.ts file
+  //if (!schemaPath.endsWith('.gen.ts')){
+  //}
+  copyFileSync(schemaPath, genSchemaPath);
+  const existingContent = readFileSync(genSchemaPath, 'utf8');
+  const newContent = `import * as dzorm from "drizzle-orm";\n${existingContent}\n${relationsList.join("\n")}`;
+  writeFileSync(genSchemaPath, newContent);
+  replaceInFileSync({filePath: drizzleConfigPath, replaceString: genSchemaPath, searchString: schemaPath } )
+}
+
+mutateSchemaFile();
