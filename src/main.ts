@@ -151,7 +151,7 @@ function mutateSchemaFile(){
   const existingContent = readFileSync(genSchemaPath, 'utf8');
   const newContent = `import * as dzorm from "drizzle-orm";\n${existingContent}\n${relationsList.join("\n")}`;
   writeFileSync(genSchemaPath, newContent);
-  console.log({filePath: drizzleConfigPath, replaceString: genSchemaPath, searchString: schemaPath } )
+  console.log({filePath: drizzleConfigPath, replaceString: genSchemaPath.replaceAll(cwd(), "."), searchString: schemaPath.replaceAll(cwd(), ".") } )
   replaceInFileSync({filePath: drizzleConfigPath, replaceString: genSchemaPath.replaceAll(cwd(), "."), searchString: schemaPath.replaceAll(cwd(), ".") } )
 }
 
