@@ -1,0 +1,17 @@
+{
+  "name": "drizzle-gen",
+  "type": "module",
+  "bin": {
+    "drizzle-gen": "./dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc && chmod +x dist/index.js",
+    "prepublish": "npm run build"
+  },
+  "version": "0.0.2",
+  "devDependencies": {
+    "@types/node": "^22.10.10",
+    "tsx": "^4.19.2",
+    "typescript": "^5.7.3"
+  }
+}
