@@ -1,7 +1,7 @@
 # drizzle-gen
 
 >### ⚠️ **ALPHA SOFTWARE**: 
->#### This package is in early development. Use at your own risk.
+>#### This package is in early development.
 >#### Only versions marked with `-alpha` are functional.
 
 Automatically generates Drizzle ORM relations based on your schema file.
