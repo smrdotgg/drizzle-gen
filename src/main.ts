@@ -110,7 +110,7 @@ function getRelationsList() {
   const finalRelationsList = relations
     .map(
       (rel) => `
-    export const ${tableNameToVariableNameMap[rel.tableName]}Relations = dzorm.relations(${tableNameToVariableNameMap[rel.tableName]}, ({one, many}) => ({
+    export const ${tableNameToVariableNameMap[rel.tableName]}Relations = relations(${tableNameToVariableNameMap[rel.tableName]}, ({one, many}) => ({
       ${rel.one
         .map((oneRel) =>
           oneRel.type === "secondary"
