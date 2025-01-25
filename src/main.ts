@@ -5,22 +5,17 @@ import { format } from "prettier";
 import { cwd } from "process";
 import { TableRelations } from "./types";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
-import { join } from "path";
+import { drizzleConfigPath, schema, schemaPath } from "./utils/schema-data";
 import { replaceInFileSync } from "./utils/replace-in-file";
 import { sqlToJsName } from "./utils/sql-to-js-name";
+import { drizzleObjectKeys } from "./utils/keys";
 
-const drizzleConfigPath = join(cwd(), "drizzle.config.ts");
-const drizzleConfig = await import(drizzleConfigPath);
-let schemaPath = join(cwd(), drizzleConfig.default.schema);
-if (schemaPath.endsWith(".gen.ts")) {
-  schemaPath = schemaPath.slice(0, schemaPath.length - 7);
-}
-const schema = await import(schemaPath);
+
 
 function filterPgTables(schemaExports: any): Record<string, any> {
   return Object.entries(schemaExports).reduce(
     (acc, [key, value]) => {
-      if (value?.constructor?.name === "PgTable") {
+      if (value?.constructor?.name === drizzleObjectKeys.table ) {
         acc[key] = value;
       }
       return acc;
@@ -42,7 +37,7 @@ function extractPrimaryRelations(
     relations.tableName = currentTable[drizzleNameSymbol!];
 
     const inlineFKSymbol = symbols.find(
-      (sym) => sym.description === "drizzle:PgInlineForeignKeys",
+      (sym) => sym.description === drizzleObjectKeys.inlineForeignKeys,
     );
     for (const fk of currentTable[inlineFKSymbol!]) {
       const data = fk.reference();

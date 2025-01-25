@@ -1,7 +1,7 @@
 # drizzle-gen
 
 >### ⚠️ **ALPHA SOFTWARE**: 
->#### This package is in early development.
+>#### This package is in active development and in the early stages.
 >#### Only versions marked with `-alpha` are functional.
 
 Automatically generates Drizzle ORM relations based on your schema file.
@@ -20,9 +20,8 @@ npx drizzle-gen@alpha
 - `--UNSAFE_auto`: Automatically updates schema file with generated relations
 
 ### Requirements
-- Drizzle ORM project with PostgreSQL. (MySQL and SQLite support in the works)
-- Valid drizzle.config.ts file
-- Schema file with table definitions
+- Drizzle ORM project with PostgreSQL or MySQL. (More DB Support in the works)
+- Valid drizzle.config.ts file that has the schema file specified as a **single string**. (List schema not yet supported)
 
 ### Example
 
@@ -70,6 +69,3 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   }),
 }));
 ```
-
-
-
