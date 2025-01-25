@@ -49,7 +49,7 @@ export const posts = pgTable("post", {
 ```
 
 ##### Output Relations
-```
+```typescript
 // Output: Generated relations
 export const postsRelations = relations(posts, ({ one, many }) => ({
   users: one(users, {
