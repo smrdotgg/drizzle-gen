@@ -142,6 +142,7 @@ function getRelationsList() {
 function mutateSchemaFile(){
   const relationsList = getRelationsList();
 
+  if (process.argv.includes("--UNSAFE_auto")) {
   const genSchemaPath = `${schemaPath}.gen.ts`;
   
   // ensure drizzle config points to .get.ts file
@@ -153,6 +154,9 @@ function mutateSchemaFile(){
   writeFileSync(genSchemaPath, newContent);
   console.log({filePath: drizzleConfigPath, replaceString: genSchemaPath.replaceAll(cwd(), "."), searchString: schemaPath.replaceAll(cwd(), ".") } )
   replaceInFileSync({filePath: drizzleConfigPath, replaceString: genSchemaPath.replaceAll(cwd(), "."), searchString: schemaPath.replaceAll(cwd(), ".") } )
+  } else {
+    console.log(relationsList.join("\n"));
+  }
 }
 
 mutateSchemaFile();

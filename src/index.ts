@@ -1,11 +1,4 @@
 #!/usr/bin/env node
-//
-//import { spawn } from "child_process";
-//import {join} from "path";
-//import { cwd } from "process";
-//
-//
-//spawn("npx", ["tsx", join(cwd(), "src", "main.ts")], { stdio: "inherit" });
 
 
 import { spawn } from "child_process";
