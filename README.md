@@ -51,17 +51,6 @@ export const posts = pgTable("post", {
 ##### Output Relations
 ```typescript
 // Output: Generated relations
-export const postsRelations = relations(posts, ({ one, many }) => ({
-  users: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
-}));
-
-export const profilesRelations = relations(profiles, ({ one, many }) => ({
-  users: one(users),
-}));
-
 export const usersRelations = relations(users, ({ one, many }) => ({
   profiles: one(profiles, {
     fields: [users.profileId],
@@ -70,6 +59,16 @@ export const usersRelations = relations(users, ({ one, many }) => ({
   posts: many(posts),
 }));
 
+export const profilesRelations = relations(profiles, ({ one, many }) => ({
+  users: one(users),
+}));
+
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  users: one(users, {
+    fields: [posts.authorId],
+    references: [users.id],
+  }),
+}));
 ```
 
 
