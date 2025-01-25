@@ -26,17 +26,51 @@ npx drizzle-gen@alpha
 
 ### Example
 
+##### Input Schema
 ```typescript
 // Input: schema.ts with table definitions
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name")
+  id: text("id").primaryKey(),
+  profileId: text("profileId")
+    .references(() => profiles.id)
+    .unique(), // adding unique makes it one-to-one
 });
 
-// Output: Generated relations
-export const usersRelations = dzorm.relations(users, ({one, many}) => ({
-  posts: many(posts)
-}));
+export const profiles = pgTable("profile", {
+  id: text("id").primaryKey(),
+  content: text("content"),
+});
+
+export const posts = pgTable("post", {
+  id: text("id").primaryKey(),
+  content: text("content"),
+  authorId: text("authorId").references(() => users.id), // not adding unique makes it one-to-many,
+});
 ```
+
+##### Output Relations
+```
+// Output: Generated relations
+export const postsRelations = relations(posts, ({ one, many }) => ({
+  users: one(users, {
+    fields: [posts.authorId],
+    references: [users.id],
+  }),
+}));
+
+export const profilesRelations = relations(profiles, ({ one, many }) => ({
+  users: one(users),
+}));
+
+export const usersRelations = relations(users, ({ one, many }) => ({
+  profiles: one(profiles, {
+    fields: [users.profileId],
+    references: [profiles.id],
+  }),
+  posts: many(posts),
+}));
+
+```
+
 
 
