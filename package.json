@@ -1,6 +1,10 @@
 {
   "name": "drizzle-gen",
   "type": "module",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/smrdotgg/drizzle-gen.git"
+  },
   "bin": {
     "drizzle-gen": "./dist/index.js"
   },
