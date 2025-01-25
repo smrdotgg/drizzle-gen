@@ -9,7 +9,7 @@
     "prepublish": "npm run build",
     "pushoutthere": "npm version patch && npm run build && npm publish"
   },
-  "version": "0.0.12",
+  "version": "0.0.13",
   "devDependencies": {
     "@types/node": "^22.10.10",
     "tsx": "^4.19.2",
