@@ -12,7 +12,7 @@ Automatically generates Drizzle ORM relations based on your schema file.
 
 
 ```bash
-npx drizzle-gen
+npx drizzle-gen@alpha
 ```
 
 ### Options
@@ -29,7 +29,6 @@ npx drizzle-gen
 ```typescript
 // Input: schema.ts with table definitions
 export const users = pgTable("users", {
-
   id: serial("id").primaryKey(),
   name: text("name")
 });
