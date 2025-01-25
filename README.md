@@ -15,9 +15,6 @@ Automatically generates Drizzle ORM relations based on your schema file.
 npx drizzle-gen@alpha
 ```
 
-### Options
-
-- `--UNSAFE_auto`: Automatically updates schema file with generated relations
 
 ### Requirements
 - Drizzle ORM project with PostgreSQL or MySQL. (More DB Support in the works)
