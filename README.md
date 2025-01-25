@@ -1,15 +1,43 @@
 # drizzle-gen
 
-To install dependencies:
+>### ⚠️ **ALPHA SOFTWARE**: 
+>#### This package is in early development. Use at your own risk.
+>#### Only versions marked with `-alpha` are functional.
+
+Automatically generates Drizzle ORM relations based on your schema file.
+
+## Usage
+
+
+
 
 ```bash
-bun install
+npx drizzle-gen
 ```
 
-To run:
+### Options
 
-```bash
-bun run index.ts
+- `--UNSAFE_auto`: Automatically updates schema file with generated relations
+
+### Requirements
+- Drizzle ORM project with PostgreSQL. (MySQL and SQLite support in the works)
+- Valid drizzle.config.ts file
+- Schema file with table definitions
+
+### Example
+
+```typescript
+// Input: schema.ts with table definitions
+export const users = pgTable("users", {
+
+  id: serial("id").primaryKey(),
+  name: text("name")
+});
+
+// Output: Generated relations
+export const usersRelations = dzorm.relations(users, ({one, many}) => ({
+  posts: many(posts)
+}));
 ```
 
-This project was created using `bun init` in bun v1.2.0. [Bun](https://bun.sh) is a fast all-in-one JavaScript runtime.
+
