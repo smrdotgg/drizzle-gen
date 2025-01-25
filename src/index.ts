@@ -17,8 +17,12 @@ const pkg = JSON.parse(
 
 
 if (!pkg.version.includes("alpha")) {
-
-  console.log("in development");
+  console.log("In development.");
+  console.log("If you want to use the alpha version use the following command.");
+  console.log("npx drizzle-gen@alpha");
+  console.log("pnpm dlx drizzle-gen@alpha");
+  console.log("yarn dlx drizzle-gen@alpha");
+  console.log("bunx drizzle-gen@alpha");
   process.exit(0);
 }
 

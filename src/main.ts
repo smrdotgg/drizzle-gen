@@ -1,42 +1,31 @@
 #!/usr/bin/env tsx
 
 export {};
+import { format } from "prettier";
 import { cwd } from "process";
 import { TableRelations } from "./types";
-import {  copyFileSync, readFileSync, writeFileSync } from 'fs';
-import {  join } from "path";
+import { copyFileSync, readFileSync, writeFileSync } from "fs";
+import { join } from "path";
 import { replaceInFileSync } from "./utils/replace-in-file";
+import { sqlToJsName } from "./utils/sql-to-js-name";
 
 const drizzleConfigPath = join(cwd(), "drizzle.config.ts");
 const drizzleConfig = await import(drizzleConfigPath);
-let schemaPath = join(cwd(), drizzleConfig.default.schema)
-if (schemaPath.endsWith('.gen.ts')){
+let schemaPath = join(cwd(), drizzleConfig.default.schema);
+if (schemaPath.endsWith(".gen.ts")) {
   schemaPath = schemaPath.slice(0, schemaPath.length - 7);
 }
 const schema = await import(schemaPath);
 
-
 function filterPgTables(schemaExports: any): Record<string, any> {
-  return Object.entries(schemaExports).reduce((acc, [key, value]) => {
-    if (value?.constructor?.name === "PgTable") {
-      acc[key] = value;
-    }
-    return acc;
-  }, {} as Record<string, any>);
-}
-
-function createTableNameMap(pgTables: Record<string, any>) {
-  return Object.entries(pgTables).reduce(
-    (acc, [variableName, currentTable]) => {
-      const symbols = Object.getOwnPropertySymbols(currentTable);
-      const drizzleNameSymbol = symbols.find(
-        (sym) => sym.description === "drizzle:Name",
-      );
-      const tableName = currentTable[drizzleNameSymbol!];
-      acc[tableName] = variableName;
+  return Object.entries(schemaExports).reduce(
+    (acc, [key, value]) => {
+      if (value?.constructor?.name === "PgTable") {
+        acc[key] = value;
+      }
       return acc;
     },
-    {} as Record<string, string>,
+    {} as Record<string, any>,
   );
 }
 
@@ -96,67 +85,93 @@ function addSecondaryRelations(relations: TableRelations[]): void {
   }
 }
 
-function getRelationsList() {
-  const pgTables = filterPgTables(schema);
+const pgTables = filterPgTables(schema);
 
+function getRelationsList() {
   const relations = extractPrimaryRelations(pgTables);
   addSecondaryRelations(relations);
 
   if (0) {
     console.log(JSON.stringify(relations, null, 2));
   }
-  const tableNameToVariableNameMap = createTableNameMap(pgTables);
 
-  const finalRelationsList = relations
-    .map(
-      (rel) => `
-    export const ${tableNameToVariableNameMap[rel.tableName]}Relations = relations(${tableNameToVariableNameMap[rel.tableName]}, ({one, many}) => ({
-      ${rel.one
-        .map((oneRel) =>
-          oneRel.type === "secondary"
-            ? `
-                    ${tableNameToVariableNameMap[oneRel.foreignTableName]}: one(${tableNameToVariableNameMap[oneRel.foreignTableName]}),
-                    `
-            : `
-                    ${tableNameToVariableNameMap[oneRel.foreignTableName]}: one(${tableNameToVariableNameMap[oneRel.foreignTableName]}, {
-                      fields: [${oneRel.myFields.map((mf) => `${tableNameToVariableNameMap[rel.tableName]}.${mf}`).join(",")}],
-                      references: [${oneRel.otherFields.map((ff) => `${tableNameToVariableNameMap[oneRel.foreignTableName]}.${ff}`).join(",")}]
-                    }),
-                    `,
-        )
-        .join("")}
-      ${rel.many
-        .map(
-          (
-            manyrel,
-          ) => `${tableNameToVariableNameMap[manyrel.foreignTableName]}: many(${tableNameToVariableNameMap[manyrel.foreignTableName]}),
-                `,
-        )
-        .join("")}
-    }));
-     `,
-    );
+  const finalRelationsList = relations.map(generateTableRelation);
   return finalRelationsList;
 }
 
-function mutateSchemaFile(){
-  const relationsList = getRelationsList();
+function generateTableRelation(rel: TableRelations) {
+  const { tableVariableName } = sqlToJsName({
+    pgTables,
+    tableName: rel.tableName,
+  });
+  return `
+    export const ${tableVariableName}Relations = relations(${tableVariableName}, ({one, many}) => ({
+      ${generateOneRelations(rel)}
+      ${generateManyRelations(rel)}
+    }));
+     `;
+}
 
-  if (process.argv.includes("--UNSAFE_auto")) {
-  const genSchemaPath = `${schemaPath}.gen.ts`;
-  
-  // ensure drizzle config points to .get.ts file
-  //if (!schemaPath.endsWith('.gen.ts')){
-  //}
-  copyFileSync(schemaPath, genSchemaPath);
-  const existingContent = readFileSync(genSchemaPath, 'utf8');
-  const newContent = `import * as dzorm from "drizzle-orm";\n${existingContent}\n${relationsList.join("\n")}`;
-  writeFileSync(genSchemaPath, newContent);
-  console.log({filePath: drizzleConfigPath, replaceString: genSchemaPath.replaceAll(cwd(), "."), searchString: schemaPath.replaceAll(cwd(), ".") } )
-  replaceInFileSync({filePath: drizzleConfigPath, replaceString: genSchemaPath.replaceAll(cwd(), "."), searchString: schemaPath.replaceAll(cwd(), ".") } )
-  } else {
-    console.log(relationsList.join("\n"));
-  }
+function generateManyRelations(rel: TableRelations) {
+  return rel.many
+    .map((manyrel) => {
+      const { tableVariableName: foreignTableVariableName } = sqlToJsName({
+        pgTables,
+        tableName: manyrel.foreignTableName,
+      });
+      return `${foreignTableVariableName}: many(${foreignTableVariableName}),\n`;
+    })
+    .join("");
+}
+
+function generateOneRelations(rel: TableRelations) {
+  const { tableVariableName: myTableVariableName } = sqlToJsName({
+    pgTables,
+    tableName: rel.tableName,
+  });
+  return rel.one
+    .map((oneRel) => {
+      const { tableVariableName: foreignTableVariableName } = sqlToJsName({
+        pgTables,
+        tableName: oneRel.foreignTableName,
+      });
+      return oneRel.type === "secondary"
+        ? `
+                    ${foreignTableVariableName}: one(${foreignTableVariableName}),
+                    `
+        : `${foreignTableVariableName}: one(${foreignTableVariableName}, {
+              fields: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
+              references: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}]
+          }),`;
+    })
+    .join("");
+}
+
+function mutateSchemaFile() {
+  format(getRelationsList().join("\n"), { parser: "typescript" }).then(
+    (relationsList) => {
+      if (process.argv.includes("--UNSAFE_auto")) {
+        const genSchemaPath = `${schemaPath}.gen.ts`;
+
+        copyFileSync(schemaPath, genSchemaPath);
+        const existingContent = readFileSync(genSchemaPath, "utf8");
+        const newContent = `import * as dzorm from "drizzle-orm";\n${existingContent}\n${relationsList}`;
+        writeFileSync(genSchemaPath, newContent);
+        console.log({
+          filePath: drizzleConfigPath,
+          replaceString: genSchemaPath.replaceAll(cwd(), "."),
+          searchString: schemaPath.replaceAll(cwd(), "."),
+        });
+        replaceInFileSync({
+          filePath: drizzleConfigPath,
+          replaceString: genSchemaPath.replaceAll(cwd(), "."),
+          searchString: schemaPath.replaceAll(cwd(), "."),
+        });
+      } else {
+        console.log(relationsList)
+      }
+    },
+  );
 }
 
 mutateSchemaFile();
