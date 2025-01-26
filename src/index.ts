@@ -30,6 +30,7 @@ if (!pkg.version.includes("alpha")) {
   process.exit(0);
 }
 
+console.log(process.argv);
 spawn("npx", ["tsx", join(__dirname, "..", "src", "main.ts"), ...process.argv.slice(2)], {
   stdio: "inherit",
 });
