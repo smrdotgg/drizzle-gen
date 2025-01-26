@@ -147,6 +147,7 @@ function main() {
   format(getRelationsList().join("\n"), { parser: "typescript" }).then(
     (relationsList) => {
       if (process.argv.includes("--UNSAFE_auto")) {
+        console.log('b1');
         const genSchemaPath = `${schemaPath}.gen.ts`;
 
         copyFileSync(schemaPath, genSchemaPath);
@@ -159,6 +160,7 @@ function main() {
           searchString: schemaPath.replaceAll(cwd(), "."),
         });
       } else {
+        console.log('b2');
         console.log(relationsList);
       }
     },
