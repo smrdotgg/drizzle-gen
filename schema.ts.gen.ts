@@ -6,7 +6,7 @@
      * Any changes made to this file will be overwritten.
      * 
      * To modify, edit the source files and re-run the generator.
-     * Generated on: 2025-01-26T12:35:34.336Z
+     * Generated on: 2025-01-26T12:43:59.871Z
      */
       import * as dzormimp from "drizzle-orm";
 
@@ -19,9 +19,12 @@ export const users = pgTable("users", {
     .unique(), // adding unique makes it one-to-one
 });
 
-export const ideas = pgTable("idea", {
+export const jonnniesss = pgTable("idea", {
   id: text("id").primaryKey(),
 });
+
+
+
 
 export const profiles = pgTable("profile", {
   id: text("id").primaryKey(),
@@ -35,8 +38,8 @@ export const posts = pgTable("post", {
 });
 
 
-export const ideasRelations = dzormimp.relations(
-  ideas,
+export const jonnniesssRelations = dzormimp.relations(
+  jonnniesss,
   ({ one, many }) => ({}),
 );
 
