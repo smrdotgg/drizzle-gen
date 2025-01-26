@@ -166,6 +166,7 @@ function main() {
     },
   );
 }
+main();
 
 
 function addRelationsImportToCode({ code }: { code: string }) {
