@@ -1,6 +1,4 @@
 #!/usr/bin/env node
-
-
 import { spawn } from "child_process";
 import { join } from "path";
 import { fileURLToPath } from "url";
@@ -32,6 +30,6 @@ if (!pkg.version.includes("alpha")) {
   process.exit(0);
 }
 
-spawn("npx", ["tsx", join(__dirname, "..", "src", "main.ts")], {
+spawn("npx", ["tsx", join(__dirname, "..", "src", "main.ts"), ...process.argv.slice(2)], {
   stdio: "inherit",
 });
