@@ -11,21 +11,23 @@ import { schemaPath } from "./utils/schema-data";
 
 import lodash from "lodash";
 import { cwd } from "process";
+import { log } from "./utils/log";
 const { debounce } = lodash;
 
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = dirname(__filename);
 
-console.log("[DEBUG] Starting script");
-console.log("[DEBUG] Current directory:", __dirname);
+
+log("[DEBUG] Starting script");
+log("[DEBUG] Current directory:", __dirname);
 
 // Get package.json
 const pkg = JSON.parse(
   readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
 );
 
-console.log("[DEBUG] Package version:", pkg.version);
+log("[DEBUG] Package version:", pkg.version);
 
 if (!pkg.version.includes("alpha")) {
   console.log("In development.");
@@ -41,7 +43,7 @@ if (!pkg.version.includes("alpha")) {
 }
 
 const spawnProcess = () => {
-  console.log("[DEBUG] Spawning new process");
+  log("[DEBUG] Spawning new process");
   return spawn(
     "npx",
     ["tsx", join(__dirname, "..", "src", "main.ts"), ...process.argv.slice(2)],
@@ -50,15 +52,15 @@ const spawnProcess = () => {
 };
 const watchAndRun = async (globPattern: string) => {
 
-  console.log("[DEBUG] Starting watch with pattern:", globPattern);
+  log("[DEBUG] Starting watch with pattern:", globPattern);
   let currentProcess: ChildProcess | null = null;
   let isProcessing = false;
 
   const runProcess = debounce(async () => {
     try {
-      console.log("[DEBUG] Running debounced process");
+      log("[DEBUG] Running debounced process");
       if (isProcessing) {
-        console.log("[DEBUG] Already processing, skipping");
+        log("[DEBUG] Already processing, skipping");
         return;
       }
 
@@ -66,17 +68,17 @@ const watchAndRun = async (globPattern: string) => {
       isProcessing = true;
 
       if (currentProcess) {
-        console.log("[DEBUG] Killing existing process");
+        log("[DEBUG] Killing existing process");
         currentProcess.kill();
         currentProcess = null;
       }
 
       currentProcess = spawnProcess();
-      console.log("[DEBUG] New process spawned");
+      log("[DEBUG] New process spawned");
       
       await new Promise((resolve) => {
         currentProcess?.on('exit', (code) => {
-          console.log("[DEBUG] Process exited with code:", code);
+          log("[DEBUG] Process exited with code:", code);
           currentProcess = null;
           isProcessing = false;
 
@@ -90,15 +92,15 @@ const watchAndRun = async (globPattern: string) => {
   }, 500);
 
   const files = await glob(globPattern);
-  console.log("[DEBUG] Found matching files:", files);
+  log("[DEBUG] Found matching files:", files);
 
 
   files.forEach((file) => {
-    console.log("[DEBUG] Setting up watchFile for:", file);
+    log("[DEBUG] Setting up watchFile for:", file);
     watchFile(file, { interval: 1000 }, async (curr, prev) => {
       if (curr.mtime !== prev.mtime) {
-        console.log("[DEBUG] File modified:", file);
-        console.log("[DEBUG] Timestamp:", new Date().toISOString());
+        log("[DEBUG] File modified:", file);
+        log("[DEBUG] Timestamp:", new Date().toISOString());
         await runProcess();
       }
     });
@@ -123,6 +125,6 @@ if (process.argv.includes("--watch")) {
     )} to ${schemaPath.replaceAll(cwd(), ".")}.gen.ts.\n(Just add .gen.ts to end of your import statement)`,
   );
   console.log(`Watching for file changes...`);
-  console.log("[DEBUG] Watch mode enabled");
+  log("[DEBUG] Watch mode enabled");
   await watchAndRun(schemaPath);
 }
