@@ -21,6 +21,6 @@ if (!pkg.version.includes("alpha")) {
     console.log("in development");
     process.exit(0);
 }
-spawn("npx", ["tsx", join(__dirname, "..", "src", "main.ts"), ...process.argv.slice(2)], {
+spawn("npx", ["tsx", join(__dirname, "..", "src", "ts-index.ts"), ...process.argv.slice(2)], {
     stdio: "inherit",
 });
