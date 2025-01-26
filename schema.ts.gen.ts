@@ -1,4 +1,4 @@
-import * as dzormimp from "drizzle-orm";import {  pgTable, text } from "drizzle-orm/pg-core";
+import {  pgTable, text } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
   id: text("id").primaryKey(),
@@ -18,25 +18,3 @@ export const posts = pgTable("post", {
   authorId: text("author_id").references(() => users.id), // not adding unique makes it one-to-many,
 });
 
-
-export const postsRelations = dzormimp.relations(posts, ({ one, many }) => ({
-  users: one(users, {
-    fields: [posts.authorId],
-    references: [users.id],
-  }),
-}));
-
-export const profilesRelations = dzormimp.relations(
-  profiles,
-  ({ one, many }) => ({
-    users: one(users),
-  }),
-);
-
-export const usersRelations = dzormimp.relations(users, ({ one, many }) => ({
-  profiles: one(profiles, {
-    fields: [users.profileId],
-    references: [profiles.id],
-  }),
-  posts: many(posts),
-}));
