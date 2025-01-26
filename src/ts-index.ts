@@ -9,6 +9,7 @@ import { ChildProcess } from "child_process";
 import { glob } from "glob";
 import { schemaPath } from "./utils/schema-data";
 import lodash from 'lodash';
+import { cwd } from "process";
  const { debounce } = lodash;
 
 const __filename = fileURLToPath(import.meta.url);
@@ -60,6 +61,7 @@ const watchAndRun = async (globPattern: string) => {
   files.forEach((file) => {
     watch(file, (eventType, filename) => {
       if (filename) {
+        console.log(new Date().toISOString())
         runProcess();
       }
     });
@@ -67,6 +69,8 @@ const watchAndRun = async (globPattern: string) => {
 };
 
 spawnProcess();
-if (process.argv.includes("--UNSAFE_auto")) {
+if (process.argv.includes("--watch")) {
+  console.log(`Change your schema import from ${schemaPath.replaceAll(cwd(), ".")} to ${schemaPath.replaceAll(cwd(), ".")}.gen.ts.\n(Just add .gen.ts to end of your import statement)`);
+  console.log(`Watching for file changes...`);
   await watchAndRun(schemaPath);
 }

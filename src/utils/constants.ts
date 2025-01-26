@@ -1,1 +1,1 @@
-export const drizzleIsAutoImported = (process.argv.includes("--UNSAFE_auto"));
+export const drizzleIsAutoImported = (process.argv.includes("--watch"));
