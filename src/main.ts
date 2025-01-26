@@ -153,7 +153,7 @@ function main() {
         copyFileSync(schemaPath, genSchemaPath);
         const existingContent = readFileSync(genSchemaPath, "utf8");
         const newContent = addRelationsImportToCode({ code:`${existingContent}\n${relationsList}` });
-        writeFileSync(genSchemaPath, newContent);
+        writeFileSync(genSchemaPath.slice(2), newContent.slice(2));
         replaceInFileSync({
           filePath: drizzleConfigPath,
           replaceString: genSchemaPath.replaceAll(cwd(), "."),
