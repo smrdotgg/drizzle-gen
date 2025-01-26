@@ -10,12 +10,10 @@ import { replaceInFileSync } from "./utils/replace-in-file";
 import { sqlToJsName } from "./utils/sql-to-js-name";
 import { drizzleObjectKeys } from "./utils/keys";
 
-
-
 function filterPgTables(schemaExports: any): Record<string, any> {
   return Object.entries(schemaExports).reduce(
     (acc, [key, value]) => {
-      if (value?.constructor?.name === drizzleObjectKeys.table ) {
+      if (value?.constructor?.name === drizzleObjectKeys.table) {
         acc[key] = value;
       }
       return acc;
@@ -142,7 +140,7 @@ function generateOneRelations(rel: TableRelations) {
     .join("");
 }
 
-function mutateSchemaFile() {
+function main() {
   format(getRelationsList().join("\n"), { parser: "typescript" }).then(
     (relationsList) => {
       if (process.argv.includes("--UNSAFE_auto")) {
@@ -150,24 +148,26 @@ function mutateSchemaFile() {
 
         copyFileSync(schemaPath, genSchemaPath);
         const existingContent = readFileSync(genSchemaPath, "utf8");
-        const newContent = `import * as dzorm from "drizzle-orm";\n${existingContent}\n${relationsList}`;
+        const newContent = addRelationsImportToCode({ code:`${existingContent}\n${relationsList}` });
         writeFileSync(genSchemaPath, newContent);
-        console.log({
-          filePath: drizzleConfigPath,
-          replaceString: genSchemaPath.replaceAll(cwd(), "."),
-          searchString: schemaPath.replaceAll(cwd(), "."),
-        });
         replaceInFileSync({
           filePath: drizzleConfigPath,
           replaceString: genSchemaPath.replaceAll(cwd(), "."),
           searchString: schemaPath.replaceAll(cwd(), "."),
         });
       } else {
-        console.log(`test: argv = ${process.argv}`)
-        console.log(relationsList)
+        console.log(relationsList);
       }
     },
   );
 }
 
-mutateSchemaFile();
+function addRelationsImportToCode({ code }: { code: string }) {
+  const relationsExists: Boolean = new Function(`${code};return typeof relations !== 'undefined';`)();
+  if (!relationsExists) {
+    return `import { relations } from "drizzle-orm";${code}`;
+  }
+  return code;
+}
+
+main();
