@@ -10,7 +10,7 @@
   },
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
-     "release:alpha": "git add . && git commit -m \"alpha: $npm_config_msg\" && npm version prerelease --preid=alpha && npm publish --tag alpha && git push",
+     "release:alpha": "sh scripts/release-alpha.sh",
     "prepublish": "npm run build",
     "pushoutthere": "npm version patch && npm run build && npm publish"
   },

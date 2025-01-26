@@ -15,7 +15,8 @@ const pkg = JSON.parse(
   readFileSync(join(__dirname, "..", "package.json"), "utf-8")
 );
 
-console.log(`argv = ${process.argv}`)
+console.log(`test: argv = ${process.argv}`)
+
 
 if (!pkg.version.includes("alpha")) {
   console.log("In development.");
