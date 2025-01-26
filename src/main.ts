@@ -3,7 +3,7 @@
 export {};
 
 import { format } from "prettier";
-import {drizzleIsAutoImported, isDrizzleAutoImported } from "./utils/constants";
+import {drizzleIsAutoImported, } from "./utils/constants";
 import { cwd } from "process";
 import { TableRelations } from "./types";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
@@ -101,7 +101,7 @@ function generateTableRelation(rel: TableRelations) {
     tableName: rel.tableName,
   });
   return `
-    export const ${tableVariableName}Relations = ${isDrizzleAutoImported ? "dzormimp." : ""}relations(${tableVariableName}, ({one, many}) => ({
+    export const ${tableVariableName}Relations = ${drizzleIsAutoImported ? "dzormimp." : ""}relations(${tableVariableName}, ({one, many}) => ({
       ${generateOneRelations(rel)}
       ${generateManyRelations(rel)}
     }));
