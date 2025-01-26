@@ -163,6 +163,7 @@ function mutateSchemaFile() {
           searchString: schemaPath.replaceAll(cwd(), "."),
         });
       } else {
+        console.log(`test: argv = ${process.argv}`)
         console.log(relationsList)
       }
     },

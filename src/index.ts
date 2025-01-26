@@ -15,7 +15,6 @@ const pkg = JSON.parse(
   readFileSync(join(__dirname, "..", "package.json"), "utf-8")
 );
 
-console.log(`test: argv = ${process.argv}`)
 
 
 if (!pkg.version.includes("alpha")) {
