@@ -1,7 +1,9 @@
 #!/usr/bin/env tsx
 
 export {};
+
 import { format } from "prettier";
+import {drizzleIsAutoImported, isDrizzleAutoImported } from "./utils/constants";
 import { cwd } from "process";
 import { TableRelations } from "./types";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
@@ -9,6 +11,7 @@ import { drizzleConfigPath, schema, schemaPath } from "./utils/schema-data";
 import { replaceInFileSync } from "./utils/replace-in-file";
 import { sqlToJsName } from "./utils/sql-to-js-name";
 import { drizzleObjectKeys } from "./utils/keys";
+
 
 function filterPgTables(schemaExports: any): Record<string, any> {
   return Object.entries(schemaExports).reduce(
@@ -98,7 +101,7 @@ function generateTableRelation(rel: TableRelations) {
     tableName: rel.tableName,
   });
   return `
-    export const ${tableVariableName}Relations = relations(${tableVariableName}, ({one, many}) => ({
+    export const ${tableVariableName}Relations = ${isDrizzleAutoImported ? "dzormimp." : ""}relations(${tableVariableName}, ({one, many}) => ({
       ${generateOneRelations(rel)}
       ${generateManyRelations(rel)}
     }));
@@ -162,12 +165,10 @@ function main() {
   );
 }
 
+
 function addRelationsImportToCode({ code }: { code: string }) {
-  const relationsExists: Boolean = new Function(`${code};return typeof relations !== 'undefined';`)();
-  if (!relationsExists) {
-    return `import { relations } from "drizzle-orm";${code}`;
+  if (drizzleIsAutoImported) {
+    return `import * as dzormimp from "drizzle-orm";${code}`;
   }
   return code;
 }
-
-main();
