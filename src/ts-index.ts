@@ -6,9 +6,10 @@ import { dirname } from "path";
 import { readFileSync } from "fs";
 import { watch } from "fs";
 import { ChildProcess } from "child_process";
-import { debounce } from "lodash";
 import { glob } from "glob";
 import { schemaPath } from "./utils/schema-data";
+import lodash from 'lodash';
+ const { debounce } = lodash;
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
