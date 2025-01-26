@@ -14,7 +14,7 @@
     "prepublish": "npm run build",
     "pushoutthere": "npm version patch && npm run build && npm publish"
   },
-  "version": "0.0.15-alpha.2",
+  "version": "0.0.15-alpha.3",
   "devDependencies": {
     "@types/node": "^22.10.10",
     "drizzle-kit": "^0.30.2",
