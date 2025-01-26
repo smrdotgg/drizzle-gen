@@ -27,8 +27,8 @@ function filterPgTables(schemaExports: any): Record<string, any> {
 function extractPrimaryRelations(
   pgTables: Record<string, any>,
 ): TableRelations[] {
-  return Object.entries(pgTables).map(([_, currentTable]) => {
-    const symbols = Object.getOwnPropertySymbols(pgTables.posts);
+  return Object.entries(pgTables).map(([key, currentTable]) => {
+    const symbols = Object.getOwnPropertySymbols(pgTables[key]);
     const drizzleNameSymbol = symbols.find(
       (sym) => sym.description === "drizzle:Name",
     );
