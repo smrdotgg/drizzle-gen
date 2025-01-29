@@ -8,7 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 // Get package.json
 const pkg = JSON.parse(readFileSync(join(__dirname, "..", "package.json"), "utf-8"));
-if (!pkg.version.includes("alpha")) {
+if (!pkg.version.includes("debug") || !pkg.version.includes("alpha")) {
     console.log("In development.");
     console.log("If you want to use the alpha version use the following command.");
     console.log("npx drizzle-gen@alpha");
