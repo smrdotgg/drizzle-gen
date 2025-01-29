@@ -22,25 +22,6 @@ const __dirname = dirname(__filename);
 log("[DEBUG] Starting script");
 log("[DEBUG] Current directory:", __dirname);
 
-// Get package.json
-const pkg = JSON.parse(
-  readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
-);
-
-log("[DEBUG] Package version:", pkg.version);
-
-if (!pkg.version.includes("alpha")) {
-  console.log("In development.");
-  console.log(
-    "If you want to use the alpha version use the following command.",
-  );
-
-  console.log("npx drizzle-gen@alpha");
-  console.log("pnpm dlx drizzle-gen@alpha");
-  console.log("yarn dlx drizzle-gen@alpha");
-  console.log("bunx drizzle-gen@alpha");
-  process.exit(0);
-}
 
 const spawnProcess = () => {
   log("[DEBUG] Spawning new process");
