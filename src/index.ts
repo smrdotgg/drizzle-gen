@@ -17,8 +17,7 @@ const pkg = JSON.parse(
 
 
 
-console.log(pkg.version);
-if (!pkg.version.includes("debug") || !pkg.version.includes("alpha")) {
+if (!pkg.version.includes("debug") && !pkg.version.includes("alpha")) {
   console.log("In development.");
   console.log("If you want to use the alpha version use the following command.");
   console.log("npx drizzle-gen@alpha");
