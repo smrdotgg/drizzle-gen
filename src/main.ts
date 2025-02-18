@@ -5,12 +5,13 @@ export {};
 import { format } from "prettier";
 import { drizzleIsAutoImported } from "./utils/constants";
 import { cwd } from "process";
-import { TableRelations } from "./types";
+import { PrimaryReference, TableRelations } from "./types";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
 import { drizzleConfigPath, schema, schemaPath } from "./utils/schema-data";
 import { replaceInFileSync } from "./utils/replace-in-file";
 import { sqlToJsName } from "./utils/sql-to-js-name";
 import { drizzleObjectKeys } from "./utils/keys";
+import { stripOfId } from "./utils/strip-of-id";
 
 function filterPgTables(schemaExports: any): Record<string, any> {
   return Object.entries(schemaExports).reduce(
@@ -39,16 +40,30 @@ function extractPrimaryRelations(
     const inlineFKSymbol = symbols.find(
       (sym) => sym.description === drizzleObjectKeys.inlineForeignKeys,
     );
+    const allMyColumns =
+      currentTable[
+        symbols.find((sym) => sym.description === drizzleObjectKeys.allColumns)!
+      ];
+
     for (const fk of currentTable[inlineFKSymbol!]) {
-      const data = fk.reference();
-      const foreignTable = data.foreignTable[drizzleNameSymbol!];
+      const foreignTableData = fk.reference();
+      const foreignTableName =
+        foreignTableData.foreignTable[drizzleNameSymbol!];
+      const myFields = (foreignTableData.columns as any[]).map((c: any) => String(c.name));
+
+      const personalFKColumnSqlNameToNickName = (pfkcn: string) =>
+        Object.entries(allMyColumns).find(([key, value]: any) => {
+          return value.name === pfkcn;
+        })![0];
+      const nicknames = myFields.map(personalFKColumnSqlNameToNickName).map(stripOfId);
 
       relations.one.push({
         type: "primary",
-        myFields: data.columns.map((c: any) => c.name),
-        isUnique: data.columns[0].isUnique,
-        foreignTableName: foreignTable,
-        otherFields: data.foreignColumns.map((c: any) => c.name),
+        myFields,
+        nicknames,
+        isUnique: foreignTableData.columns[0].isUnique,
+        foreignTableName: foreignTableName,
+        otherFields: foreignTableData.foreignColumns.map((c: any) => c.name),
       });
     }
 
@@ -58,22 +73,28 @@ function extractPrimaryRelations(
 
 function addSecondaryRelations(relations: TableRelations[]): void {
   for (const table of relations) {
-    for (const oneRef of table.one) {
+    for (let i = 0; i < table.one.length; i ++) {
+      const oneRef = table.one[i];
+    // for (const oneRef of table.one) {
       if (oneRef.type !== "primary") continue;
 
       const foreignTable = relations.find(
         (t) => t.tableName === oneRef.foreignTableName,
       )!;
 
+        console.log(table);
       if (oneRef.isUnique) {
         foreignTable.one.push({
           type: "secondary",
+          // foreignTableName: `${(table.one[0] as PrimaryReference).nicknames[0]}_reverse`,
           foreignTableName: table.tableName,
+          nickname: stripOfId((table.one[i] as PrimaryReference).nicknames[0]),
         });
       } else {
         foreignTable.many.push({
           type: "secondary",
           foreignTableName: table.tableName,
+          nickname: stripOfId((table.one[i] as PrimaryReference).nicknames[0]),
         });
       }
     }
@@ -85,10 +106,6 @@ const pgTables = filterPgTables(schema);
 function getRelationsList() {
   const relations = extractPrimaryRelations(pgTables);
   addSecondaryRelations(relations);
-
-  if (0) {
-    console.log(JSON.stringify(relations, null, 2));
-  }
 
   const finalRelationsList = relations.map(generateTableRelation);
   return finalRelationsList;
@@ -110,11 +127,13 @@ function generateTableRelation(rel: TableRelations) {
 function generateManyRelations(rel: TableRelations) {
   return rel.many
     .map((manyrel) => {
+      console.log('generateManyRelations');
+      console.log(JSON.stringify(manyrel));
       const { tableVariableName: foreignTableVariableName } = sqlToJsName({
         pgTables,
         tableName: manyrel.foreignTableName,
       });
-      return `${foreignTableVariableName}: many(${foreignTableVariableName}),\n`;
+      return `${foreignTableVariableName}: many(${foreignTableVariableName}, {relationName: "${manyrel.nickname}"}),\n`;
     })
     .join("");
 }
@@ -130,13 +149,17 @@ function generateOneRelations(rel: TableRelations) {
         pgTables,
         tableName: oneRel.foreignTableName,
       });
+      if ('nicknames' in oneRel){
+        oneRel.nicknames = oneRel.nicknames.map(stripOfId)
+      }
       return oneRel.type === "secondary"
         ? `
-                    ${foreignTableVariableName}: one(${foreignTableVariableName}),
+                    ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}),
                     `
-        : `${foreignTableVariableName}: one(${foreignTableVariableName}, {
+        : `${oneRel.nicknames[0]}: one(${foreignTableVariableName}, {
               fields: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
-              references: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}]
+              references: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
+              relationName: "${oneRel.nicknames[0]}",
           }),`;
     })
     .join("");
