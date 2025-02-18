@@ -82,7 +82,6 @@ function addSecondaryRelations(relations: TableRelations[]): void {
         (t) => t.tableName === oneRef.foreignTableName,
       )!;
 
-        console.log(table);
       if (oneRef.isUnique) {
         foreignTable.one.push({
           type: "secondary",
@@ -127,8 +126,6 @@ function generateTableRelation(rel: TableRelations) {
 function generateManyRelations(rel: TableRelations) {
   return rel.many
     .map((manyrel) => {
-      console.log('generateManyRelations');
-      console.log(JSON.stringify(manyrel));
       const { tableVariableName: foreignTableVariableName } = sqlToJsName({
         pgTables,
         tableName: manyrel.foreignTableName,
