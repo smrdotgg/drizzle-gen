@@ -49,13 +49,18 @@ function extractPrimaryRelations(
       const foreignTableData = fk.reference();
       const foreignTableName =
         foreignTableData.foreignTable[drizzleNameSymbol!];
-      const myFields = (foreignTableData.columns as any[]).map((c: any) => String(c.name));
+      const myFields = (foreignTableData.columns as any[]).map((c: any) =>
+        String(c.name),
+      );
 
       const personalFKColumnSqlNameToNickName = (pfkcn: string) =>
         Object.entries(allMyColumns).find(([key, value]: any) => {
           return value.name === pfkcn;
         })![0];
-      const nicknames = myFields.map(personalFKColumnSqlNameToNickName).map(stripOfId);
+      const nicknames = myFields
+        .map(personalFKColumnSqlNameToNickName)
+        .map(stripOfId)
+        .map((r) => `${relations.tableName}_${r}`); //.map(s => `${s}`);
 
       relations.one.push({
         type: "primary",
@@ -73,9 +78,9 @@ function extractPrimaryRelations(
 
 function addSecondaryRelations(relations: TableRelations[]): void {
   for (const table of relations) {
-    for (let i = 0; i < table.one.length; i ++) {
+    for (let i = 0; i < table.one.length; i++) {
       const oneRef = table.one[i];
-    // for (const oneRef of table.one) {
+      // for (const oneRef of table.one) {
       if (oneRef.type !== "primary") continue;
 
       const foreignTable = relations.find(
@@ -87,13 +92,13 @@ function addSecondaryRelations(relations: TableRelations[]): void {
           type: "secondary",
           // foreignTableName: `${(table.one[0] as PrimaryReference).nicknames[0]}_reverse`,
           foreignTableName: table.tableName,
-          nickname: stripOfId((table.one[i] as PrimaryReference).nicknames[0]),
+          nickname: (table.one[i] as PrimaryReference).nicknames[0],
         });
       } else {
         foreignTable.many.push({
           type: "secondary",
           foreignTableName: table.tableName,
-          nickname: stripOfId((table.one[i] as PrimaryReference).nicknames[0]),
+          nickname: (table.one[i] as PrimaryReference).nicknames[0],
         });
       }
     }
@@ -130,7 +135,7 @@ function generateManyRelations(rel: TableRelations) {
         pgTables,
         tableName: manyrel.foreignTableName,
       });
-      return `${foreignTableVariableName}: many(${foreignTableVariableName}, {relationName: "${manyrel.nickname}"}),\n`;
+      return `${manyrel.nickname}: many(${foreignTableVariableName}, {relationName: "${manyrel.nickname}"}),\n`;
     })
     .join("");
 }
@@ -146,8 +151,8 @@ function generateOneRelations(rel: TableRelations) {
         pgTables,
         tableName: oneRel.foreignTableName,
       });
-      if ('nicknames' in oneRel){
-        oneRel.nicknames = oneRel.nicknames.map(stripOfId)
+      if ("nicknames" in oneRel) {
+        oneRel.nicknames = oneRel.nicknames.map(stripOfId);
       }
       return oneRel.type === "secondary"
         ? `
