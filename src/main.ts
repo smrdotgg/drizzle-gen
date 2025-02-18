@@ -154,7 +154,7 @@ function generateOneRelations(rel: TableRelations) {
       }
       return oneRel.type === "secondary"
         ? `
-                    ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}"),
+                    ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}"}),
                     `
         : `${oneRel.nicknames[0]}: one(${foreignTableVariableName}, {
               fields: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
