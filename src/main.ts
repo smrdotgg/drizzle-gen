@@ -153,12 +153,16 @@ function generateOneRelations(rel: TableRelations) {
         pgTables,
         tableName: oneRel.foreignTableName,
       });
-      const [fields, references] = oneRel.type === "primary" ? ['fields', 'references'] : [ 'references','fields'];
-return `${oneRel.nickname}: one(${foreignTableVariableName}, {
+      const [fields, references] =
+        oneRel.type === "primary"
+          ? ["fields", "references"]
+          : ["references", "fields"];
+      const secondParam = `{
               ${fields}: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
               ${references}: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
               relationName: "${oneRel.nickname}",
-          }),`
+          }`;
+      return `${oneRel.nickname}: one(${foreignTableVariableName}, ${oneRel.type === "primary" ? secondParam : ''}),`;
       // return oneRel.type === "secondary"
       //   ? `
       //               ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}"}),
