@@ -57,15 +57,15 @@ function extractPrimaryRelations(
         Object.entries(allMyColumns).find(([key, value]: any) => {
           return value.name === pfkcn;
         })![0];
-      const nicknames = myFields
+      const nickname = myFields
         .map(personalFKColumnSqlNameToNickName)
         .map(stripOfId)
-        .map((r) => `${relations.tableName}_${r}`); //.map(s => `${s}`);
+        .map((r) => `${relations.tableName}_${r}`)[0]; //.map(s => `${s}`);
 
       relations.one.push({
         type: "primary",
         myFields,
-        nicknames,
+        nickname,
         isUnique: foreignTableData.columns[0].isUnique,
         foreignTableName: foreignTableName,
         otherFields: foreignTableData.foreignColumns.map((c: any) => c.name),
@@ -92,13 +92,15 @@ function addSecondaryRelations(relations: TableRelations[]): void {
           type: "secondary",
           // foreignTableName: `${(table.one[0] as PrimaryReference).nicknames[0]}_reverse`,
           foreignTableName: table.tableName,
-          nickname: (table.one[i] as PrimaryReference).nicknames[0],
+          nickname: (table.one[i] as PrimaryReference).nickname,
+          myFields: oneRef.otherFields,
+          otherFields: oneRef.myFields,
         });
       } else {
         foreignTable.many.push({
           type: "secondary",
           foreignTableName: table.tableName,
-          nickname: (table.one[i] as PrimaryReference).nicknames[0],
+          nickname: (table.one[i] as PrimaryReference).nickname,
         });
       }
     }
@@ -151,18 +153,21 @@ function generateOneRelations(rel: TableRelations) {
         pgTables,
         tableName: oneRel.foreignTableName,
       });
-      if ("nicknames" in oneRel) {
-        oneRel.nicknames = oneRel.nicknames.map(stripOfId);
-      }
-      return oneRel.type === "secondary"
-        ? `
-                    ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}"}),
-                    `
-        : `${oneRel.nicknames[0]}: one(${foreignTableVariableName}, {
-              fields: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
-              references: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
-              relationName: "${oneRel.nicknames[0]}",
-          }),`;
+      const [fields, references] = oneRel.type === "primary" ? ['fields', 'references'] : [ 'references','fields'];
+return `${oneRel.nickname}: one(${foreignTableVariableName}, {
+              ${fields}: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
+              ${references}: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
+              relationName: "${oneRel.nickname}",
+          }),`
+      // return oneRel.type === "secondary"
+      //   ? `
+      //               ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}"}),
+      //               `
+      //   : `${oneRel.nicknames[0]}: one(${foreignTableVariableName}, {
+      //         fields: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
+      //         references: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
+      //         relationName: "${oneRel.nicknames[0]}",
+      //     }),`;
     })
     .join("");
 }

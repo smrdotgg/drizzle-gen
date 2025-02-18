@@ -1,11 +1,12 @@
 
 export type PrimaryReference = {
   type: "primary";
-  myFields: string[];
-  nicknames: string[];
-  isUnique: boolean;
   foreignTableName: string;
+  nickname: string;
+
+  myFields: string[];
   otherFields: string[];
+  isUnique: boolean;
 };
 
 export type SecondaryReference = {
@@ -13,9 +14,16 @@ export type SecondaryReference = {
   foreignTableName: string;
   nickname: string;
 };
+export type OneSecondaryReference = {
+  type: "secondary";
+  foreignTableName: string;
+  nickname: string;
+  myFields: string[];
+  otherFields: string[];
+};
 
 export type TableRelations = {
-  one: (PrimaryReference | SecondaryReference)[];
+  one: (PrimaryReference | OneSecondaryReference)[];
   many: SecondaryReference[];
   tableName: string;
 };
