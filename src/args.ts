@@ -22,6 +22,5 @@ export const argvConfig = (() => {
     }
     item.inputFiles.push(schemaPath);
   }
-  console.log(item);
   return item;
 })();

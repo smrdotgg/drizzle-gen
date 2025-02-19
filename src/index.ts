@@ -14,7 +14,6 @@ const pkg = JSON.parse(
   readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
 );
 
-console.log(pkg.version);
 if (!pkg.version.includes("debug") && !pkg.version.includes("alpha")) {
   console.log("In development.");
   console.log(

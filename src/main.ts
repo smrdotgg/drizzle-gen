@@ -7,7 +7,12 @@ import { drizzleIsAutoImported } from "./utils/constants";
 import { cwd } from "process";
 import { PrimaryReference, TableRelations } from "./types";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
-import { drizzleConfigPath, schema, schemaName, schemaPath } from "./utils/schema-data";
+import {
+  drizzleConfigPath,
+  schema,
+  schemaName,
+  schemaPath,
+} from "./utils/schema-data";
 import { replaceInFileSync } from "./utils/replace-in-file";
 import { sqlToJsName } from "./utils/sql-to-js-name";
 import { drizzleObjectKeys } from "./utils/keys";
@@ -125,13 +130,12 @@ function generateTableRelation(rel: TableRelations) {
     tableName: rel.tableName,
   });
   return `
-    export const ${tableVariableName}Relations = ${drizzleIsAutoImported ? "dzormimp." : ""}relations(${drizzleIsAutoImported ? "originalSchema.": ""}${tableVariableName}, ({one, many}) => ({
+    export const ${tableVariableName}Relations = ${drizzleIsAutoImported ? "dzormimp." : ""}relations(${drizzleIsAutoImported ? "originalSchema." : ""}${tableVariableName}, ({one, many}) => ({
       ${generateOneRelations(rel)}
       ${generateManyRelations(rel)}
     }));
      `;
 }
-
 
 function generateManyRelations(rel: TableRelations) {
   return rel.many
@@ -141,11 +145,12 @@ function generateManyRelations(rel: TableRelations) {
         tableName: manyrel.foreignTableName,
       });
       const allForeignTables = rel.many
-        .filter(rel => rel.foreignTableName === manyrel.foreignTableName)
+        .filter((rel) => rel.foreignTableName === manyrel.foreignTableName)
         .map((rel) => rel.foreignTableName);
-      const moreThanOne = (new Set(allForeignTables).size !== allForeignTables.length);
+      const moreThanOne =
+        new Set(allForeignTables).size !== allForeignTables.length;
       return `${moreThanOne ? manyrel.nickname : foreignTableVariableName}: many(
-        ${drizzleIsAutoImported ? "originalSchema.": ""}${foreignTableVariableName},
+        ${drizzleIsAutoImported ? "originalSchema." : ""}${foreignTableVariableName},
         ${moreThanOne ? `{relationName: "${manyrel.nickname}"},` : ""}
 
       ),\n`;
@@ -169,17 +174,18 @@ function generateOneRelations(rel: TableRelations) {
         .filter((rel) => rel.type === "primary")
         .filter((rel) => rel.foreignTableName === oneRel.foreignTableName)
         .map((rel) => rel.foreignTableName);
-      const moreThanOne = (new Set(allForeignTables).size !== allForeignTables.length);
+      const moreThanOne =
+        new Set(allForeignTables).size !== allForeignTables.length;
       const [fields, references] =
         oneRel.type === "primary"
           ? ["fields", "references"]
           : ["references", "fields"];
       const secondParam = `{
-              ${fields}: [${oneRel.myFields.map((myField) => `${drizzleIsAutoImported ? "originalSchema.": ""}${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
-              ${references}: [${oneRel.otherFields.map((ff) => `${drizzleIsAutoImported ? "originalSchema.": ""}${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
+              ${fields}: [${oneRel.myFields.map((myField) => `${drizzleIsAutoImported ? "originalSchema." : ""}${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
+              ${references}: [${oneRel.otherFields.map((ff) => `${drizzleIsAutoImported ? "originalSchema." : ""}${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
               ${moreThanOne ? `relationName: "${oneRel.nickname}",` : ""}
           }`;
-      return `${moreThanOne ? oneRel.nickname : foreignTableVariableName}: one(${drizzleIsAutoImported ? "originalSchema.": ""}${foreignTableVariableName}, ${oneRel.type === "primary" ? secondParam : ""}),`;
+      return `${moreThanOne ? oneRel.nickname : foreignTableVariableName}: one(${drizzleIsAutoImported ? "originalSchema." : ""}${foreignTableVariableName}, ${oneRel.type === "primary" ? secondParam : ""}),`;
       // return oneRel.type === "secondary"
       //   ? `
       //               ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}"}),
@@ -193,7 +199,7 @@ function generateOneRelations(rel: TableRelations) {
     .join("");
 }
 
-function addRelationsImportToCode({ code }: { code: string }) {
+async function addRelationsImportToCode({ code }: { code: string }) {
   if (drizzleIsAutoImported) {
     return `
     /**
@@ -217,21 +223,13 @@ function addRelationsImportToCode({ code }: { code: string }) {
 }
 
 function main() {
-  format(getRelationsList().join("\n"), { parser: "typescript" }).then(
-    (relationsList) => {
-      if (process.argv.includes("--watch")) {
-        const genSchemaPath = argvConfig.outputTarget;
-        // copyFileSync(schemaPath, genSchemaPath);
-        // const existingContent = readFileSync(genSchemaPath, "utf8");
-        const newContent = addRelationsImportToCode({
-          code: `${relationsList}`,
-        });
-        console.log(newContent);
-        writeFileSync(genSchemaPath, newContent);
-      } else {
-        console.log(relationsList);
-      }
-    },
-  );
+  const relationsList = getRelationsList().join("\n");
+  addRelationsImportToCode({ code: relationsList })
+    .then((code) => format(code, { parser: "typescript" }))
+    .then((formattedCode) =>
+      process.argv.includes("--watch")
+        ? writeFileSync(argvConfig.outputTarget, formattedCode)
+        : console.log(formattedCode),
+    );
 }
 main();

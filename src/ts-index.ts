@@ -98,13 +98,6 @@ const watchAndRun = async (globPattern: string[]) => {
 spawnProcess();
 
 if (process.argv.includes("--watch")) {
-  console.log(
-    `Change your schema import from ${schemaPath.replaceAll(
-      cwd(),
-      ".",
-    )} to ${schemaPath.replaceAll(cwd(), ".")}.gen.ts.\n(Just add .gen.ts to end of your import statement)`,
-
-  );
   console.log(`Watching for file changes...`);
   log("[DEBUG] Watch mode enabled");
   await watchAndRun(argvConfig.inputFiles);
