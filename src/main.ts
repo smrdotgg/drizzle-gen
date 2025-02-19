@@ -208,6 +208,8 @@ function addRelationsImportToCode({ code }: { code: string }) {
       import * as dzormimp from "drizzle-orm";
       import * as originalSchema from "./${schemaName.split("/").at(-1)!.slice(0, -3)}";
 
+      export *  from "./${schemaName.split("/").at(-1)!.slice(0, -3)}";
+
       ${code}
     `;
   }
