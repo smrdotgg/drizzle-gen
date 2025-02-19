@@ -206,7 +206,7 @@ function addRelationsImportToCode({ code }: { code: string }) {
      * Generated on: ${new Date().toISOString()}
      */
       import * as dzormimp from "drizzle-orm";
-      import * as originalSchema from "./${schemaName.slice(0, -3)}";
+      import * as originalSchema from "./${schemaName.split("/").at(-1)!.slice(0, -3)}";
 
       ${code}
     `;
