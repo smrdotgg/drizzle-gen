@@ -8,6 +8,7 @@ const drizzleConfig = (await import(drizzleConfigPath)).default as Config;
 
 export const databaseType = drizzleConfig.dialect;  
 
+export let schemaName = String(drizzleConfig.schema);
 export let schemaPath = join(cwd(), String(drizzleConfig.schema));
 if (schemaPath.endsWith(".gen.ts")) {
   schemaPath = schemaPath.slice(0, schemaPath.length - 7);

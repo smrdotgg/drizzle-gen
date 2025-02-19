@@ -12,15 +12,12 @@ import { schemaPath } from "./utils/schema-data";
 import lodash from "lodash";
 import { cwd } from "process";
 import { log } from "./utils/log";
+import { argvConfig } from "./args";
 const { debounce } = lodash;
 
 const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = dirname(__filename);
-
-
-log("[DEBUG] Starting script");
-log("[DEBUG] Current directory:", __dirname);
 
 
 const spawnProcess = () => {
@@ -31,7 +28,7 @@ const spawnProcess = () => {
     { stdio: "inherit" },
   );
 };
-const watchAndRun = async (globPattern: string) => {
+const watchAndRun = async (globPattern: string[]) => {
 
   log("[DEBUG] Starting watch with pattern:", globPattern);
   let currentProcess: ChildProcess | null = null;
@@ -73,6 +70,8 @@ const watchAndRun = async (globPattern: string) => {
   }, 500);
 
   const files = await glob(globPattern);
+  console.log("watching");
+  console.log(files);
   log("[DEBUG] Found matching files:", files);
 
 
@@ -104,8 +103,9 @@ if (process.argv.includes("--watch")) {
       cwd(),
       ".",
     )} to ${schemaPath.replaceAll(cwd(), ".")}.gen.ts.\n(Just add .gen.ts to end of your import statement)`,
+
   );
   console.log(`Watching for file changes...`);
   log("[DEBUG] Watch mode enabled");
-  await watchAndRun(schemaPath);
+  await watchAndRun(argvConfig.inputFiles);
 }
