@@ -147,6 +147,7 @@ function generateManyRelations(rel: TableRelations) {
       const allForeignTables = rel.many
         .filter((rel) => rel.foreignTableName === manyrel.foreignTableName)
         .map((rel) => rel.foreignTableName);
+        console.log(`myTable = ${rel.tableName}, foreign tables = ${allForeignTables}`);
       const moreThanOne =
         new Set(allForeignTables).size !== allForeignTables.length;
       return `${moreThanOne ? manyrel.nickname : foreignTableVariableName}: many(
@@ -174,6 +175,7 @@ function generateOneRelations(rel: TableRelations) {
         .filter((rel) => rel.type === "primary")
         .filter((rel) => rel.foreignTableName === oneRel.foreignTableName)
         .map((rel) => rel.foreignTableName);
+        console.log(`[one] myTable = ${rel.tableName}, foreign tables = ${allForeignTables}`);
       const moreThanOne =
         new Set(allForeignTables).size !== allForeignTables.length;
       const [fields, references] =
@@ -209,7 +211,6 @@ async function addRelationsImportToCode({ code }: { code: string }) {
      * Any changes made to this file will be overwritten.
      * 
      * To modify, edit the source files and re-run the generator.
-     * Generated on: ${new Date().toISOString()}
      */
       import * as dzormimp from "drizzle-orm";
       import * as originalSchema from "./${schemaName.split("/").at(-1)!.slice(0, -3)}";
