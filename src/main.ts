@@ -147,7 +147,6 @@ function generateManyRelations(rel: TableRelations) {
       const allForeignTables = rel.many
         .filter((rel) => rel.foreignTableName === manyrel.foreignTableName)
         .map((rel) => rel.foreignTableName);
-        console.log(`myTable = ${rel.tableName}, foreign tables = ${allForeignTables}`);
       const moreThanOne =
         new Set(allForeignTables).size !== allForeignTables.length;
       return `${moreThanOne ? manyrel.nickname : foreignTableVariableName}: many(
@@ -175,7 +174,6 @@ function generateOneRelations(rel: TableRelations) {
         .filter((rel) => rel.type === "primary")
         .filter((rel) => rel.foreignTableName === oneRel.foreignTableName)
         .map((rel) => rel.foreignTableName);
-        console.log(`[one] myTable = ${rel.tableName}, foreign tables = ${allForeignTables}`);
       const moreThanOne =
         new Set(allForeignTables).size !== allForeignTables.length;
       const [fields, references] =
