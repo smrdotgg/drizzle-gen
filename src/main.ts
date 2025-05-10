@@ -20,6 +20,28 @@ import { stripOfId } from "./utils/strip-of-id";
 import processArgv from "process.argv";
 import { argvConfig } from "./args";
 
+// Helper function to find the longest common prefix among strings
+function findLongestCommonPrefixStrings(strs: string[]): string {
+  if (!strs || strs.length === 0) {
+    return "";
+  }
+  // Require at least two tables to establish a "common" prefix for stripping
+  if (strs.length === 1) {
+    return "";
+  }
+
+  let prefix = strs[0];
+  for (let i = 1; i < strs.length; i++) {
+    while (strs[i].indexOf(prefix) !== 0) {
+      prefix = prefix.substring(0, prefix.length - 1);
+      if (prefix === "") {
+        return "";
+      }
+    }
+  }
+  return prefix;
+}
+
 function filterPgTables(schemaExports: any): Record<string, any> {
   return Object.entries(schemaExports).reduce(
     (acc, [key, value]) => {
@@ -117,30 +139,61 @@ function addSecondaryRelations(relations: TableRelations[]): void {
 const pgTables = filterPgTables(schema);
 
 function getRelationsList() {
+  const tableJsNames = Object.keys(pgTables);
+  let prefixToStrip = "";
+
+  if (tableJsNames.length > 0) {
+    const commonPrefix = findLongestCommonPrefixStrings(tableJsNames);
+    if (commonPrefix) {
+      const allHaveNonEmptyRemainder = tableJsNames.every(
+        (name) => name.length > commonPrefix.length,
+      );
+
+      if (allHaveNonEmptyRemainder) {
+        const firstTableName = tableJsNames[0];
+        const firstRemainder = firstTableName.substring(commonPrefix.length);
+        if (
+          firstRemainder.length > 0 &&
+          (commonPrefix.endsWith("_") ||
+            (firstRemainder[0] >= "A" && firstRemainder[0] <= "Z"))
+        ) {
+          prefixToStrip = commonPrefix;
+        }
+      }
+    }
+  }
+
   const relations = extractPrimaryRelations(pgTables);
   addSecondaryRelations(relations);
 
-  const finalRelationsList = relations.map(generateTableRelation);
+  const finalRelationsList = relations.map((rel) =>
+    generateTableRelation(rel, prefixToStrip),
+  );
   return finalRelationsList;
 }
 
-function generateTableRelation(rel: TableRelations) {
-  const { tableVariableName } = sqlToJsName({
+function generateTableRelation(rel: TableRelations, prefixToStrip: string) {
+  let { tableVariableName } = sqlToJsName({
     pgTables,
     tableName: rel.tableName,
   });
+  if (prefixToStrip && tableVariableName.startsWith(prefixToStrip)) {
+    const stripped = tableVariableName.substring(prefixToStrip.length);
+    if (stripped.length > 0) tableVariableName = stripped;
+  }
+
   return `
     export const ${tableVariableName}Relations = ${drizzleIsAutoImported ? "dzormimp." : ""}relations(${drizzleIsAutoImported ? "originalSchema." : ""}${tableVariableName}, ({one, many}) => ({
-      ${generateOneRelations(rel)}
-      ${generateManyRelations(rel)}
+      ${generateOneRelations(rel, prefixToStrip)}
+      ${generateManyRelations(rel, prefixToStrip)}
     }));
      `;
 }
 
-function generateManyRelations(rel: TableRelations) {
+function generateManyRelations(rel: TableRelations, prefixToStrip: string) {
   return rel.many
     .map((manyrel) => {
-      const { tableVariableName: foreignTableVariableName } = sqlToJsName({
+      let { tableVariableName: foreignTableVariableName } = sqlToJsName({
         pgTables,
         tableName: manyrel.foreignTableName,
       });
@@ -148,8 +201,31 @@ function generateManyRelations(rel: TableRelations) {
         .filter((rel) => rel.foreignTableName === manyrel.foreignTableName)
         .map((rel) => rel.foreignTableName);
       const moreThanOne =
-        new Set(allForeignTables).size !== allForeignTables.length;
-      return `${moreThanOne ? manyrel.nickname : foreignTableVariableName}: many(
+        new Set(
+          allForeignTables.map((ftn) => {
+            let { tableVariableName: tvn } = sqlToJsName({
+              pgTables,
+              tableName: ftn,
+            });
+            if (prefixToStrip && tvn.startsWith(prefixToStrip)) {
+              const stripped = tvn.substring(prefixToStrip.length);
+              if (stripped.length > 0) return stripped;
+            }
+            return tvn;
+          }),
+        ).size !== allForeignTables.length;
+
+      if (prefixToStrip && foreignTableVariableName.startsWith(prefixToStrip)) {
+        const stripped = foreignTableVariableName.substring(
+          prefixToStrip.length,
+        );
+        if (stripped.length > 0) foreignTableVariableName = stripped;
+      }
+      const relationKey = moreThanOne
+        ? manyrel.nickname
+        : foreignTableVariableName;
+
+      return `${relationKey}: many(
         ${drizzleIsAutoImported ? "originalSchema." : ""}${foreignTableVariableName},
         ${moreThanOne ? `{relationName: "${manyrel.nickname}"},` : ""}
 
@@ -158,14 +234,19 @@ function generateManyRelations(rel: TableRelations) {
     .join("");
 }
 
-function generateOneRelations(rel: TableRelations) {
-  const { tableVariableName: myTableVariableName } = sqlToJsName({
+function generateOneRelations(rel: TableRelations, prefixToStrip: string) {
+  let { tableVariableName: myTableVariableName } = sqlToJsName({
     pgTables,
     tableName: rel.tableName,
   });
+  if (prefixToStrip && myTableVariableName.startsWith(prefixToStrip)) {
+    const stripped = myTableVariableName.substring(prefixToStrip.length);
+    if (stripped.length > 0) myTableVariableName = stripped;
+  }
+
   return rel.one
     .map((oneRel) => {
-      const { tableVariableName: foreignTableVariableName } = sqlToJsName({
+      let { tableVariableName: foreignTableVariableName } = sqlToJsName({
         pgTables,
         tableName: oneRel.foreignTableName,
       });
@@ -175,7 +256,30 @@ function generateOneRelations(rel: TableRelations) {
         .filter((rel) => rel.foreignTableName === oneRel.foreignTableName)
         .map((rel) => rel.foreignTableName);
       const moreThanOne =
-        new Set(allForeignTables).size !== allForeignTables.length;
+        new Set(
+          allForeignTables.map((ftn) => {
+            let { tableVariableName: tvn } = sqlToJsName({
+              pgTables,
+              tableName: ftn,
+            });
+            if (prefixToStrip && tvn.startsWith(prefixToStrip)) {
+              const stripped = tvn.substring(prefixToStrip.length);
+              if (stripped.length > 0) return stripped;
+            }
+            return tvn;
+          }),
+        ).size !== allForeignTables.length;
+
+      if (prefixToStrip && foreignTableVariableName.startsWith(prefixToStrip)) {
+        const stripped = foreignTableVariableName.substring(
+          prefixToStrip.length,
+        );
+        if (stripped.length > 0) foreignTableVariableName = stripped;
+      }
+      const relationKey = moreThanOne
+        ? oneRel.nickname
+        : foreignTableVariableName;
+
       const [fields, references] =
         oneRel.type === "primary"
           ? ["fields", "references"]
@@ -185,16 +289,7 @@ function generateOneRelations(rel: TableRelations) {
               ${references}: [${oneRel.otherFields.map((ff) => `${drizzleIsAutoImported ? "originalSchema." : ""}${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
               ${moreThanOne ? `relationName: "${oneRel.nickname}",` : ""}
           }`;
-      return `${moreThanOne ? oneRel.nickname : foreignTableVariableName}: one(${drizzleIsAutoImported ? "originalSchema." : ""}${foreignTableVariableName}, ${oneRel.type === "primary" ? secondParam : ""}),`;
-      // return oneRel.type === "secondary"
-      //   ? `
-      //               ${foreignTableVariableName}: one(${foreignTableVariableName}, {relationName: "${oneRel.nickname}"}),
-      //               `
-      //   : `${oneRel.nicknames[0]}: one(${foreignTableVariableName}, {
-      //         fields: [${oneRel.myFields.map((myField) => `${myTableVariableName}.${sqlToJsName({ tableName: rel.tableName, pgTables, columnName: myField }).columnVariableName}`).join(",")}],
-      //         references: [${oneRel.otherFields.map((ff) => `${foreignTableVariableName}.${sqlToJsName({ tableName: oneRel.foreignTableName, pgTables, columnName: ff }).columnVariableName}`).join(",")}],
-      //         relationName: "${oneRel.nicknames[0]}",
-      //     }),`;
+      return `${relationKey}: one(${drizzleIsAutoImported ? "originalSchema." : ""}${foreignTableVariableName}, ${oneRel.type === "primary" ? secondParam : ""}),`;
     })
     .join("");
 }
