@@ -19,7 +19,6 @@ const __filename = fileURLToPath(import.meta.url);
 
 const __dirname = dirname(__filename);
 
-
 const spawnProcess = () => {
   log("[DEBUG] Spawning new process");
   return spawn(
@@ -29,7 +28,6 @@ const spawnProcess = () => {
   );
 };
 const watchAndRun = async (globPattern: string[]) => {
-
   log("[DEBUG] Starting watch with pattern:", globPattern);
   let currentProcess: ChildProcess | null = null;
   let isProcessing = false;
@@ -42,7 +40,6 @@ const watchAndRun = async (globPattern: string[]) => {
         return;
       }
 
-
       isProcessing = true;
 
       if (currentProcess) {
@@ -53,9 +50,9 @@ const watchAndRun = async (globPattern: string[]) => {
 
       currentProcess = spawnProcess();
       log("[DEBUG] New process spawned");
-      
+
       await new Promise((resolve) => {
-        currentProcess?.on('exit', (code) => {
+        currentProcess?.on("exit", (code) => {
           log("[DEBUG] Process exited with code:", code);
           currentProcess = null;
           isProcessing = false;
@@ -74,7 +71,6 @@ const watchAndRun = async (globPattern: string[]) => {
   console.log(files);
   log("[DEBUG] Found matching files:", files);
 
-
   files.forEach((file) => {
     log("[DEBUG] Setting up watchFile for:", file);
     watchFile(file, { interval: 1000 }, async (curr, prev) => {
@@ -86,19 +82,15 @@ const watchAndRun = async (globPattern: string[]) => {
     });
   });
 
-
   // Keep process alive
   return new Promise(() => {});
-
 };
-
-
-
 
 spawnProcess();
 
 if (process.argv.includes("--watch")) {
   console.log(`Watching for file changes...`);
   log("[DEBUG] Watch mode enabled");
+  log(`[DEBUG] inputFiles = ${argvConfig.inputFiles}`);
   await watchAndRun(argvConfig.inputFiles);
 }
