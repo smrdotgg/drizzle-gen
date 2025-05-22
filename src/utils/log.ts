@@ -1,7 +1,7 @@
-let shouldLog = 0;
+const shouldLog = !!process.env.DEBUG;
 
 export const log = (...args: Parameters<typeof console.log>) => {
-  if (shouldLog){
+  if (shouldLog) {
     console.log(args);
   }
-}
+};
