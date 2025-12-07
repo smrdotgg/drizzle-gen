@@ -1,17 +1,18 @@
 import argv from "process.argv";
 import { schemaPath } from "./utils/schema-data";
+import { log } from "./utils/log";
 
 const functionName = "argvConfigSetup";
 
 export const argvConfig = (() => {
   try {
-    console.log(`[${functionName}] Starting argv configuration processing.`);
+    log(`[${functionName}] Starting argv configuration processing.`);
 
     const processArgv = argv(process.argv.slice(2));
-    console.log(
-      `[${functionName}] Parsed process arguments:`,
-      process.argv.slice(2),
-    );
+    log(`[${functionName}] Parsed process arguments:`, {
+      "process.argv.slice(2)": process.argv.slice(2),
+      processArgv,
+    });
 
     const item = processArgv({
       watch: false,
@@ -19,29 +20,28 @@ export const argvConfig = (() => {
       outputTarget: `${schemaPath}.gen.ts`,
     });
 
-    console.log(`[${functionName}] Initial configuration created:`, item);
+    log(`[${functionName}] Initial configuration created:`, item);
 
     if (!item.inputFiles.includes(schemaPath)) {
-      console.log(
+      log(
         `[${functionName}] Schema path missing from inputFiles, attempting to fix.`,
         { currentInputFiles: item.inputFiles },
       );
 
       if (typeof item.inputFiles === "string") {
-        console.log(
-          `[${functionName}] Converting inputFiles from string to array.`,
-          { inputFilesBefore: item.inputFiles },
-        );
+        log(`[${functionName}] Converting inputFiles from string to array.`, {
+          inputFilesBefore: item.inputFiles,
+        });
         item.inputFiles = [String(item.inputFiles)];
       }
 
       item.inputFiles.push(schemaPath);
-      console.log(`[${functionName}] Schema path appended to inputFiles.`, {
+      log(`[${functionName}] Schema path appended to inputFiles.`, {
         updatedInputFiles: item.inputFiles,
       });
     }
 
-    console.log(`[${functionName}] Final configuration ready:`, item);
+    log(`[${functionName}] Final configuration ready:`, item);
     return item;
   } catch (error) {
     console.error(
