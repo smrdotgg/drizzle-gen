@@ -90,7 +90,7 @@ spawnProcess();
 
 if (process.argv.includes("--watch")) {
   console.log(`Watching for file changes...`);
-  log("[DEBUG] Watch mode enabled");
-  log(`[DEBUG] inputFiles = ${argvConfig.inputFiles}`);
+  console.log("[DEBUG] Watch mode enabled");
+  console.log(`[DEBUG] inputFiles = ${argvConfig.inputFiles}`);
   await watchAndRun(argvConfig.inputFiles);
 }
