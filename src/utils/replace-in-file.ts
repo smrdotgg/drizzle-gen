@@ -1,4 +1,5 @@
 import { readFileSync, writeFileSync } from "fs";
+import { log } from "./log";
 
 
 export function replaceInFileSync({
@@ -12,21 +13,21 @@ export function replaceInFileSync({
 }): void {
   try {
 
-    console.log(`Reading file: ${filePath}`);
+    log(`Reading file: ${filePath}`);
 
     const content = readFileSync(filePath, "utf8");
-    console.log(`Found content of length: ${content.length}`);
+    log(`Found content of length: ${content.length}`);
 
 
     const newContent = content.replaceAll(searchString, replaceString);
 
-    console.log(
+    log(
       `Replacing all occurrences of "${searchString}" with "${replaceString}"`
     );
 
     writeFileSync(filePath, newContent);
 
-    console.log("File successfully updated");
+    log("File successfully updated");
   } catch (error) {
     console.error(`Error occurred: ${error}`);
     throw new Error(`Failed to replace in file: ${error}`);

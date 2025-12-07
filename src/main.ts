@@ -142,26 +142,26 @@ function getRelationsList() {
   const tableJsNames = Object.keys(pgTables);
   let prefixToStrip = "";
 
-  if (tableJsNames.length > 0) {
-    const commonPrefix = findLongestCommonPrefixStrings(tableJsNames);
-    if (commonPrefix) {
-      const allHaveNonEmptyRemainder = tableJsNames.every(
-        (name) => name.length > commonPrefix.length,
-      );
-
-      if (allHaveNonEmptyRemainder) {
-        const firstTableName = tableJsNames[0];
-        const firstRemainder = firstTableName.substring(commonPrefix.length);
-        if (
-          firstRemainder.length > 0 &&
-          (commonPrefix.endsWith("_") ||
-            (firstRemainder[0] >= "A" && firstRemainder[0] <= "Z"))
-        ) {
-          prefixToStrip = commonPrefix;
-        }
-      }
-    }
-  }
+  // if (tableJsNames.length > 0) {
+  //   const commonPrefix = findLongestCommonPrefixStrings(tableJsNames);
+  //   if (commonPrefix) {
+  //     const allHaveNonEmptyRemainder = tableJsNames.every(
+  //       (name) => name.length > commonPrefix.length,
+  //     );
+  //
+  //     if (allHaveNonEmptyRemainder) {
+  //       const firstTableName = tableJsNames[0];
+  //       const firstRemainder = firstTableName.substring(commonPrefix.length);
+  //       if (
+  //         firstRemainder.length > 0 &&
+  //         (commonPrefix.endsWith("_") ||
+  //           (firstRemainder[0] >= "A" && firstRemainder[0] <= "Z"))
+  //       ) {
+  //         prefixToStrip = commonPrefix;
+  //       }
+  //     }
+  //   }
+  // }
 
   const relations = extractPrimaryRelations(pgTables);
   addSecondaryRelations(relations);
