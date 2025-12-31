@@ -6,12 +6,12 @@ Automatically generates Drizzle ORM relations based on your schema file.
 ## Usage
 
 ```bash
-npx drizzle-gen@alpha
+npx drizzle-gen@0.0.17-debug.13
 ```
 If you want to have your relations auto generated as you work on your schema,
 add `--watch`.
 ```bash
-npx drizzle-gen@alpha --watch
+npx drizzle-gen@0.0.17-debug.13 --watch
 ```
 > **NOTE:** You should change your schema import to `{schema_path}.gen.ts`. Drizzle-gen will auto update the `.gen.ts` file as you work on your schema.
 
