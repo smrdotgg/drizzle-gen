@@ -94,7 +94,7 @@ function extractPrimaryRelations(
       relations.one.push({
         type: "primary",
         myFields,
-        nickname,
+        nickname: `${nickname}One`,
         isUnique: foreignTableData.columns[0].isUnique,
         foreignTableName: foreignTableName,
         otherFields: foreignTableData.foreignColumns.map((c: any) => c.name),
@@ -121,7 +121,10 @@ function addSecondaryRelations(relations: TableRelations[]): void {
           type: "secondary",
           // foreignTableName: `${(table.one[0] as PrimaryReference).nicknames[0]}_reverse`,
           foreignTableName: table.tableName,
-          nickname: (table.one[i] as PrimaryReference).nickname,
+          nickname: (table.one[i] as PrimaryReference).nickname.replace(
+            /One$/,
+            "One",
+          ),
           myFields: oneRef.otherFields,
           otherFields: oneRef.myFields,
         });
@@ -129,7 +132,10 @@ function addSecondaryRelations(relations: TableRelations[]): void {
         foreignTable.many.push({
           type: "secondary",
           foreignTableName: table.tableName,
-          nickname: (table.one[i] as PrimaryReference).nickname,
+          nickname: (table.one[i] as PrimaryReference).nickname.replace(
+            /One$/,
+            "Many",
+          ),
         });
       }
     }
