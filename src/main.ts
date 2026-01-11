@@ -200,7 +200,11 @@ function generateManyRelations(rel: TableRelations, prefixToStrip: string) {
       const allForeignTables = rel.many
         .filter((rel) => rel.foreignTableName === manyrel.foreignTableName)
         .map((rel) => rel.foreignTableName);
+      const alsoInOne = rel.one.some(
+        (o) => o.foreignTableName === manyrel.foreignTableName,
+      );
       const moreThanOne =
+        alsoInOne ||
         new Set(
           allForeignTables.map((ftn) => {
             let { tableVariableName: tvn } = sqlToJsName({
@@ -255,7 +259,11 @@ function generateOneRelations(rel: TableRelations, prefixToStrip: string) {
         .filter((rel) => rel.type === "primary")
         .filter((rel) => rel.foreignTableName === oneRel.foreignTableName)
         .map((rel) => rel.foreignTableName);
+      const alsoInMany = rel.many.some(
+        (m) => m.foreignTableName === oneRel.foreignTableName,
+      );
       const moreThanOne =
+        alsoInMany ||
         new Set(
           allForeignTables.map((ftn) => {
             let { tableVariableName: tvn } = sqlToJsName({
