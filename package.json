@@ -6,7 +6,7 @@
     "url": "git+https://github.com/smrdotgg/drizzle-gen.git"
   },
   "bin": {
-    "drizzle-gen": "./dist/index.js"
+    "drizzle-gen": "./dist/ts-index.js"
   },
   "scripts": {
     "build": "tsc && chmod +x dist/index.js",
@@ -27,6 +27,7 @@
   },
   "dependencies": {
     "@tanstack/pacer": "^0.18.0",
+    "bun": "1.3.0",
     "glob": "^11.0.1",
     "lodash": "^4.17.21",
     "postgres": "^3.4.5",

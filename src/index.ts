@@ -10,14 +10,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 // Get package.json
-const pkg = JSON.parse(
-  readFileSync(join(__dirname, "..", "package.json"), "utf-8"),
-);
 
 spawn(
-  "npx",
+  "npm",
   [
-    "tsx",
+    "bun",
     join(__dirname, "..", "src", "ts-index.ts"),
     ...process.argv.slice(2),
   ],
