@@ -3,7 +3,10 @@
 export {};
 
 import { format } from "prettier";
-import { drizzleIsAutoImported } from "./utils/constants";
+import {
+  drizzleIsAutoImported,
+  validDrizzleTableNames,
+} from "./utils/constants";
 import { cwd } from "process";
 import { PrimaryReference, TableRelations } from "./types";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
@@ -12,10 +15,8 @@ import {
   schema,
   schemaName,
   schemaPath,
-} from "./utils/schema-data";
-import { replaceInFileSync } from "./utils/replace-in-file";
+} from "./utils/config";
 import { sqlToJsName } from "./utils/sql-to-js-name";
-import { drizzleObjectKeys } from "./utils/keys";
 import { stripOfId } from "./utils/strip-of-id";
 import processArgv from "process.argv";
 import { argvConfig } from "./args";
@@ -45,7 +46,7 @@ function findLongestCommonPrefixStrings(strs: string[]): string {
 function filterPgTables(schemaExports: any): Record<string, any> {
   return Object.entries(schemaExports).reduce(
     (acc, [key, value]) => {
-      if (value?.constructor?.name === drizzleObjectKeys.table) {
+      if (value?.constructor?.name === validDrizzleTableNames.table) {
         acc[key] = value;
       }
       return acc;
@@ -67,11 +68,13 @@ function extractPrimaryRelations(
     relations.tableName = currentTable[drizzleNameSymbol!];
 
     const inlineFKSymbol = symbols.find(
-      (sym) => sym.description === drizzleObjectKeys.inlineForeignKeys,
+      (sym) => sym.description === validDrizzleTableNames.inlineForeignKeys,
     );
     const allMyColumns =
       currentTable[
-        symbols.find((sym) => sym.description === drizzleObjectKeys.allColumns)!
+        symbols.find(
+          (sym) => sym.description === validDrizzleTableNames.drizzleColumns,
+        )!
       ];
 
     for (const fk of currentTable[inlineFKSymbol!]) {
@@ -143,60 +146,31 @@ function addSecondaryRelations(relations: TableRelations[]): void {
 }
 
 const pgTables = filterPgTables(schema);
-
 function getRelationsList() {
   const tableJsNames = Object.keys(pgTables);
-  let prefixToStrip = "";
-
-  // if (tableJsNames.length > 0) {
-  //   const commonPrefix = findLongestCommonPrefixStrings(tableJsNames);
-  //   if (commonPrefix) {
-  //     const allHaveNonEmptyRemainder = tableJsNames.every(
-  //       (name) => name.length > commonPrefix.length,
-  //     );
-  //
-  //     if (allHaveNonEmptyRemainder) {
-  //       const firstTableName = tableJsNames[0];
-  //       const firstRemainder = firstTableName.substring(commonPrefix.length);
-  //       if (
-  //         firstRemainder.length > 0 &&
-  //         (commonPrefix.endsWith("_") ||
-  //           (firstRemainder[0] >= "A" && firstRemainder[0] <= "Z"))
-  //       ) {
-  //         prefixToStrip = commonPrefix;
-  //       }
-  //     }
-  //   }
-  // }
 
   const relations = extractPrimaryRelations(pgTables);
   addSecondaryRelations(relations);
 
-  const finalRelationsList = relations.map((rel) =>
-    generateTableRelation(rel, prefixToStrip),
-  );
+  const finalRelationsList = relations.map((rel) => generateTableRelation(rel));
   return finalRelationsList;
 }
 
-function generateTableRelation(rel: TableRelations, prefixToStrip: string) {
+function generateTableRelation(rel: TableRelations) {
   let { tableVariableName } = sqlToJsName({
     pgTables,
     tableName: rel.tableName,
   });
-  if (prefixToStrip && tableVariableName.startsWith(prefixToStrip)) {
-    const stripped = tableVariableName.substring(prefixToStrip.length);
-    if (stripped.length > 0) tableVariableName = stripped;
-  }
 
   return `
     export const ${tableVariableName}Relations = ${drizzleIsAutoImported ? "dzormimp." : ""}relations(${drizzleIsAutoImported ? "originalSchema." : ""}${tableVariableName}, ({one, many}) => ({
-      ${generateOneRelations(rel, prefixToStrip)}
-      ${generateManyRelations(rel, prefixToStrip)}
+      ${generateOneRelations(rel)}
+      ${generateManyRelations(rel)}
     }));
      `;
 }
 
-function generateManyRelations(rel: TableRelations, prefixToStrip: string) {
+function generateManyRelations(rel: TableRelations) {
   return rel.many
     .map((manyrel) => {
       let { tableVariableName: foreignTableVariableName } = sqlToJsName({
@@ -217,20 +191,10 @@ function generateManyRelations(rel: TableRelations, prefixToStrip: string) {
               pgTables,
               tableName: ftn,
             });
-            if (prefixToStrip && tvn.startsWith(prefixToStrip)) {
-              const stripped = tvn.substring(prefixToStrip.length);
-              if (stripped.length > 0) return stripped;
-            }
             return tvn;
           }),
         ).size !== allForeignTables.length;
 
-      if (prefixToStrip && foreignTableVariableName.startsWith(prefixToStrip)) {
-        const stripped = foreignTableVariableName.substring(
-          prefixToStrip.length,
-        );
-        if (stripped.length > 0) foreignTableVariableName = stripped;
-      }
       const relationKey = moreThanOne
         ? manyrel.nickname
         : foreignTableVariableName;
@@ -244,15 +208,11 @@ function generateManyRelations(rel: TableRelations, prefixToStrip: string) {
     .join("");
 }
 
-function generateOneRelations(rel: TableRelations, prefixToStrip: string) {
+function generateOneRelations(rel: TableRelations) {
   let { tableVariableName: myTableVariableName } = sqlToJsName({
     pgTables,
     tableName: rel.tableName,
   });
-  if (prefixToStrip && myTableVariableName.startsWith(prefixToStrip)) {
-    const stripped = myTableVariableName.substring(prefixToStrip.length);
-    if (stripped.length > 0) myTableVariableName = stripped;
-  }
 
   return rel.one
     .map((oneRel) => {
@@ -276,20 +236,10 @@ function generateOneRelations(rel: TableRelations, prefixToStrip: string) {
               pgTables,
               tableName: ftn,
             });
-            if (prefixToStrip && tvn.startsWith(prefixToStrip)) {
-              const stripped = tvn.substring(prefixToStrip.length);
-              if (stripped.length > 0) return stripped;
-            }
             return tvn;
           }),
         ).size !== allForeignTables.length;
 
-      if (prefixToStrip && foreignTableVariableName.startsWith(prefixToStrip)) {
-        const stripped = foreignTableVariableName.substring(
-          prefixToStrip.length,
-        );
-        if (stripped.length > 0) foreignTableVariableName = stripped;
-      }
       const relationKey = moreThanOne
         ? oneRel.nickname
         : foreignTableVariableName;
@@ -322,7 +272,7 @@ async function addRelationsImportToCode({ code }: { code: string }) {
       import * as dzormimp from "drizzle-orm";
       import * as originalSchema from "./${schemaName.split("/").at(-1)!.slice(0, -3)}";
 
-      export *  from "./${schemaName.split("/").at(-1)!.slice(0, -3)}";
+      export * from "./${schemaName.split("/").at(-1)!.slice(0, -3)}";
 
       ${code}
     `;
@@ -335,9 +285,8 @@ function main() {
   addRelationsImportToCode({ code: relationsList })
     .then((code) => format(code, { parser: "typescript" }))
     .then((formattedCode) =>
-      process.argv.includes("--watch")
-        ? writeFileSync(argvConfig.outputTarget, formattedCode)
-        : console.log(formattedCode),
+      writeFileSync(`${schemaPath}.gen.ts`, formattedCode),
     );
 }
+console.log("run");
 main();

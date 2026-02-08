@@ -1,7 +1,6 @@
 import argv from "process.argv";
-import { schemaPath } from "./utils/schema-data";
-import { log } from "./utils/log";
-
+import { schemaPath } from "./utils/config";
+const log = console.log;
 const functionName = "argvConfigSetup";
 
 export const argvConfig = (() => {

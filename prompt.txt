@@ -1,0 +1,10 @@
+I need you to look at the file "get-dependencies.ts". It is incomplete. You can find the docs for bun.build in context7. I need you to write a function that, given a path to a file, will return a list of paths for every single file in the codebase that that file depends on, excluding anything from node_modules. (I believe there is an `external` flag for node_module dependencies, you can check).
+
+
+Develop a comprehensive plan to do this. Afterwards, you will create 5 different complicated test scenerios (in "dep-tests/") and test all of them.
+
+For now, develop a comprehensive plan, and then after I'll switch you to build mode so you can execute on your plan.
+
+
+
+
