@@ -1,21 +1,35 @@
 {
   "name": "drizzle-gen",
+  "version": "1.0.1",
+  "description": "Automatically generates Drizzle ORM relations based on your schema file",
   "type": "module",
   "repository": {
     "type": "git",
     "url": "git+https://github.com/smrdotgg/drizzle-gen.git"
   },
   "bin": {
-    "drizzle-gen": "./dist/ts-index.js"
+    "drizzle-gen": "./bin/drizzle-gen.js"
   },
+  "files": [
+    "bin/"
+  ],
   "scripts": {
-    "build": "tsc && chmod +x dist/index.js",
-    "release:alpha": "sh scripts/release-alpha.sh",
-    "release:debug": "sh scripts/release-debug.sh",
-    "prepublish": "npm run build",
-    "pushoutthere": "npm version patch && npm run build && npm publish"
+    "build:binary": "sh scripts/build-binaries.sh",
+    "build:binary:all": "sh scripts/build-binaries.sh --all",
+    "release": "sh scripts/release.sh",
+    "prepublishOnly": "npm run build:binary:all"
   },
-  "version": "0.0.17-debug.25",
+  "keywords": [
+    "drizzle",
+    "orm",
+    "relations",
+    "generator",
+    "typescript",
+    "postgresql",
+    "mysql"
+  ],
+  "author": "smrdotgg",
+  "license": "MIT",
   "devDependencies": {
     "@types/bun": "^1.3.8",
     "@types/lodash": "^4.17.14",
@@ -27,11 +41,12 @@
   },
   "dependencies": {
     "@tanstack/pacer": "^0.18.0",
-    "bun": "1.3.0",
     "glob": "^11.0.1",
     "lodash": "^4.17.21",
     "postgres": "^3.4.5",
-    "prettier": "^3.5.1",
     "process.argv": "^1.0.0"
+  },
+  "engines": {
+    "node": ">=18.0.0"
   }
 }
