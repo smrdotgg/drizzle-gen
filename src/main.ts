@@ -288,5 +288,4 @@ function main() {
       writeFileSync(`${schemaPath}.gen.ts`, formattedCode),
     );
 }
-console.log("run");
 main();
