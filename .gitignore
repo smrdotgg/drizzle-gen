@@ -184,4 +184,4 @@ bin/drizzle-gen-darwin-*
 bin/drizzle-gen-linux-*
 bin/drizzle-gen-windows-*
 bin/drizzle-gen
-!bin/drizzle-gen.js
+!bin/drizzle-gen.cjs

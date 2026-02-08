@@ -8,7 +8,7 @@
     "url": "git+https://github.com/smrdotgg/drizzle-gen.git"
   },
   "bin": {
-    "drizzle-gen": "./bin/drizzle-gen.js"
+    "drizzle-gen": "./bin/drizzle-gen.cjs"
   },
   "files": [
     "bin/"
