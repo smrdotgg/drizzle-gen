@@ -2,24 +2,23 @@
 
 export {};
 
-import { format } from "prettier";
-import {
-  drizzleIsAutoImported,
-  validDrizzleTableNames,
-} from "./utils/constants";
-import { cwd } from "process";
-import { PrimaryReference, TableRelations } from "./types";
 import { copyFileSync, readFileSync, writeFileSync } from "fs";
+import { cwd } from "process";
+import processArgv from "process.argv";
+import { argvConfig } from "./args";
+import { PrimaryReference, TableRelations } from "./types";
 import {
   drizzleConfigPath,
   schema,
   schemaName,
   schemaPath,
 } from "./utils/config";
+import {
+  drizzleIsAutoImported,
+  validDrizzleTableNames,
+} from "./utils/constants";
 import { sqlToJsName } from "./utils/sql-to-js-name";
 import { stripOfId } from "./utils/strip-of-id";
-import processArgv from "process.argv";
-import { argvConfig } from "./args";
 
 // Helper function to find the longest common prefix among strings
 function findLongestCommonPrefixStrings(strs: string[]): string {
@@ -280,12 +279,8 @@ async function addRelationsImportToCode({ code }: { code: string }) {
   return code;
 }
 
-function main() {
+export async function run() {
   const relationsList = getRelationsList().join("\n");
-  addRelationsImportToCode({ code: relationsList })
-    .then((code) => format(code, { parser: "typescript" }))
-    .then((formattedCode) =>
-      writeFileSync(`${schemaPath}.gen.ts`, formattedCode),
-    );
+  const code = await addRelationsImportToCode({ code: relationsList });
+  writeFileSync(`${schemaPath}.gen.ts`, code);
 }
-main();

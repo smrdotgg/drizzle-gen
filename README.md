@@ -1,28 +1,62 @@
 # drizzle-gen
 
+Automatically generates Drizzle ORM relations based on your Drizzle ORM schema file.
 
-Automatically generates Drizzle ORM relations based on your schema file.
+## Installation
+
+No installation required! Use directly with your favorite package manager:
+
+```bash
+# Using npx (npm)
+npx drizzle-gen
+
+# Using pnpx (pnpm)
+pnpx drizzle-gen
+
+# Using bunx (bun)
+bunx drizzle-gen
+```
+
+Or install globally:
+
+```bash
+npm install -g drizzle-gen
+# Then run:
+drizzle-gen
+```
 
 ## Usage
 
-```bash
-npx drizzle-gen@0.0.17-debug.13
-```
-If you want to have your relations auto generated as you work on your schema,
-add `--watch`.
-```bash
-npx drizzle-gen@0.0.17-debug.13 --watch
-```
-> **NOTE:** You should change your schema import to `{schema_path}.gen.ts`. Drizzle-gen will auto update the `.gen.ts` file as you work on your schema.
+Run in your project directory (where `drizzle.config.ts` is located):
 
+```bash
+npx drizzle-gen
+```
+
+For development with auto-regeneration on file changes:
+
+```bash
+npx drizzle-gen --watch
+```
+
+> **NOTE:** Import from `{schema_path}.gen.ts` in your code. Drizzle-gen will auto-update the `.gen.ts` file as you work on your schema.
+
+### Supported Package Managers
+
+- ✅ npm (`npx drizzle-gen`)
+- ✅ pnpm (`pnpx drizzle-gen`)
+- ✅ bun (`bunx drizzle-gen`)
+- ✅ yarn (`yarn dlx drizzle-gen`)
 
 ### Requirements
+
 - Drizzle ORM project with PostgreSQL or MySQL. (More DB Support in the works)
 - Valid drizzle.config.ts file that has the schema file specified as a **single string**. (List schema not yet supported)
 
 ### Example
 
 ##### Input Schema
+
 ```typescript
 // Input: schema.ts with table definitions
 export const users = pgTable("users", {
@@ -45,6 +79,7 @@ export const posts = pgTable("post", {
 ```
 
 ##### Output Relations
+
 ```typescript
 // Output: Generated relations
 export const usersRelations = relations(users, ({ one, many }) => ({
@@ -66,4 +101,3 @@ export const postsRelations = relations(posts, ({ one, many }) => ({
   }),
 }));
 ```
-

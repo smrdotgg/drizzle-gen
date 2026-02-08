@@ -174,5 +174,14 @@ out
 
 # Finder (MacOS) folder config
 .DS_Store
+
+# Test files
 drizzle.config.ts
 schema.ts
+
+# Compiled binaries (these are built during publish, not committed)
+bin/drizzle-gen-darwin-*
+bin/drizzle-gen-linux-*
+bin/drizzle-gen-windows-*
+bin/drizzle-gen
+!bin/drizzle-gen.js

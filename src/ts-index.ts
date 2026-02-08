@@ -1,15 +1,12 @@
 #!/usr/bin/env bun
 
-import { join } from "node:path";
-import { $ } from "bun";
 import { watchFile } from "fs";
+import { run } from "./main";
+import { schemaName } from "./utils/config";
 import { getDependencies } from "./utils/get-dependencies";
-import { drizzleConfigPath, schemaName } from "./utils/config";
 
 const args = process.argv.slice(2);
 const isWatchMode = args.includes("-w") || args.includes("--watch");
-
-const main = () => $`bun ${join(__dirname, "main.ts")}`.nothrow();
 
 if (isWatchMode) {
   const dependencies = [schemaName, ...(await getDependencies(schemaName))];
@@ -21,13 +18,13 @@ if (isWatchMode) {
       if (curr.mtime !== prev.mtime) {
         console.log(`[watch] File modified: ${dep}`);
         console.log(`[watch] Re-running...`);
-        await main();
+        await run();
         console.log(`[watch] Watching for changes...`);
       }
     });
   }
 
-  await main();
+  await run();
 } else {
-  await main();
+  await run();
 }
