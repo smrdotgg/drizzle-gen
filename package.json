@@ -1,6 +1,6 @@
 {
   "name": "drizzle-gen",
-  "version": "1.0.2",
+  "version": "1.0.3",
   "description": "Automatically generates Drizzle ORM relations based on your schema file",
   "type": "module",
   "repository": {
